@@ -17,7 +17,6 @@ package header
 import (
 	"encoding/binary"
 
-	"github.com/google/btree"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/checksum"
 	"gvisor.dev/gvisor/pkg/tcpip/seqnum"
@@ -175,11 +174,6 @@ type SACKBlock struct {
 	End seqnum.Value
 }
 
-// Less returns true if r.Start < b.Start.
-func (r SACKBlock) Less(b btree.Item) bool {
-	return r.Start.LessThan(b.(SACKBlock).Start)
-}
-
 // Contains returns true if b is completely contained in r.
 func (r SACKBlock) Contains(b SACKBlock) bool {
 	return r.Start.LessThanEq(b.Start) && b.End.LessThanEq(r.End)
@@ -219,9 +213,8 @@ const (
 	// TCPTotalHeaderMaximumSize is the maximum size of headers from all layers in
 	// a TCP packet. It analogous to MAX_TCP_HEADER in Linux.
 	//
-	// TODO(b/319936470): Investigate why this needs to be at least 140 bytes. In
-	// Linux this value is at least 160, but in theory we should be able to use
-	// 138. In practice anything less than 140 starts to break GSO on gVNIC
+	// Note: In Linux this value is at least 160, but in theory we should be able
+	// to use 138. In practice anything less than 140 starts to break GSO on gVNIC
 	// hardware.
 	TCPTotalHeaderMaximumSize = 160
 

@@ -19,13 +19,18 @@ func listenURL(parsed *url.URL) (net.Listener, error) {
 			return nil, err
 		}
 		path := path.Join(parsed.Path, fmt.Sprintf("00000002.%08x", port))
-		if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
-			return nil, err
-		}
-		return net.ListenUnix("unix", &net.UnixAddr{
+		listener, err := net.ListenUnix("unix", &net.UnixAddr{
 			Name: path,
 			Net:  "unix",
 		})
+		if err != nil {
+			return nil, err
+		}
+		if err := os.Chmod(path, 0600); err != nil { // #nosec G703 - constructed path for socket permissions
+			_ = listener.Close()
+			return nil, err
+		}
+		return listener, nil
 	default:
 		return defaultListenURL(parsed)
 	}

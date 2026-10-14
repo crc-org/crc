@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/containers/gvisor-tap-vsock/pkg/apilog"
 	"github.com/containers/gvisor-tap-vsock/pkg/tap"
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"github.com/insomniacslk/dhcp/dhcpv4"
@@ -44,7 +45,7 @@ func handler(configuration *types.Configuration, ipPool *tap.IPPool) server4.Han
 			return
 		}
 
-		reply.YourIPAddr = ip
+		reply.YourIPAddr = net.IP(ip.AsSlice())
 		reply.UpdateOption(dhcpv4.OptServerIdentifier(net.ParseIP(configuration.GatewayIP)))
 		reply.UpdateOption(dhcpv4.OptIPAddressLeaseTime(time.Hour))
 
@@ -130,8 +131,10 @@ func (s *Server) Serve() error {
 
 func (s *Server) Mux() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/leases", func(w http.ResponseWriter, _ *http.Request) {
-		_ = json.NewEncoder(w).Encode(s.IPPool.Leases())
+	mux.HandleFunc("/leases", func(w http.ResponseWriter, r *http.Request) {
+		if err := json.NewEncoder(w).Encode(s.IPPool.Leases()); err != nil {
+			apilog.SetError(r, err)
+		}
 	})
 	return mux
 }

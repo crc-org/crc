@@ -18,7 +18,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/rand"
+	"time"
 
+	"golang.org/x/time/rate"
+	"gvisor.dev/gvisor/pkg/log"
 	"gvisor.dev/gvisor/pkg/sleep"
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/tcpip"
@@ -32,7 +35,7 @@ import (
 //
 // +stateify savable
 type epQueue struct {
-	mu   sync.Mutex `state:"nosave"`
+	mu   epQueueMutex `state:"nosave"`
 	list endpointList
 }
 
@@ -78,9 +81,8 @@ func (q *epQueue) empty() bool {
 //
 // +stateify savable
 type processor struct {
-	epQ     epQueue
-	sleeper sleep.Sleeper
-	// TODO(b/341946753): Restore them when netstack is savable.
+	epQ              epQueue
+	sleeper          sleep.Sleeper `state:"nosave"`
 	newEndpointWaker sleep.Waker   `state:"nosave"`
 	closeWaker       sleep.Waker   `state:"nosave"`
 	pauseWaker       sleep.Waker   `state:"nosave"`
@@ -150,7 +152,7 @@ func handleConnecting(ep *Endpoint) {
 		ep.mu.Unlock()
 		return
 	}
-	if err := ep.h.processSegments(); err != nil { // +checklocksforce:ep.h.ep.mu
+	if err := ep.h.processSegments(); err != nil {
 		// handshake failed. clean up the tcp endpoint and handshake
 		// state.
 		if lEP := ep.h.listenEP; lEP != nil {
@@ -254,6 +256,8 @@ func handleTimeWait(ep *Endpoint) {
 	ep.mu.Unlock()
 }
 
+var warnRateLimiter = rate.NewLimiter(rate.Every(time.Second), 1)
+
 // handleListen is responsible for TCP processing for an endpoint in LISTEN
 // state.
 func handleListen(ep *Endpoint) {
@@ -275,9 +279,11 @@ func handleListen(ep *Endpoint) {
 			break
 		}
 
-		// TODO(gvisor.dev/issue/4690): Better handle errors instead of
-		// silently dropping.
-		_ = ep.handleListenSegment(ep.listenCtx, s)
+		if err := ep.handleListenSegment(ep.listenCtx, s); err != nil {
+			if warnRateLimiter.Allow() {
+				log.Warningf("tcp.Endpoint.handleListenSegment() failed for packet [nic=%d, source=%s, dest=%s, protocol=%d]: %v", s.pkt.NICID, s.pkt.Network().SourceAddress(), s.pkt.Network().DestinationAddress(), s.pkt.NetworkProtocolNumber, err)
+			}
+		}
 		s.DecRef()
 	}
 }
@@ -366,7 +372,7 @@ type dispatcher struct {
 	processors []processor
 	wg         sync.WaitGroup `state:"nosave"`
 	hasher     jenkinsHasher
-	mu         sync.Mutex `state:"nosave"`
+	mu         dispatcherMutex `state:"nosave"`
 	// +checklocks:mu
 	paused bool
 	// +checklocks:mu
@@ -381,9 +387,18 @@ func (d *dispatcher) init(rng *rand.Rand, nProcessors int) {
 
 	d.mu.Lock()
 	defer d.mu.Unlock()
+
 	d.closed = false
 	d.processors = make([]processor, nProcessors)
 	d.hasher = jenkinsHasher{seed: rng.Uint32()}
+	d.startLocked()
+}
+
+// +checklocks:d.mu
+func (d *dispatcher) startLocked() {
+	if d.closed {
+		return
+	}
 	for i := range d.processors {
 		p := &d.processors[i]
 		p.sleeper.AddWaker(&p.newEndpointWaker)
@@ -397,6 +412,13 @@ func (d *dispatcher) init(rng *rand.Rand, nProcessors int) {
 		// that results in a heap-allocated function literal.
 		go p.start(&d.wg)
 	}
+}
+
+func (d *dispatcher) start() {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.startLocked()
 }
 
 // close closes a dispatcher and its processors.

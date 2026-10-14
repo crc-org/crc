@@ -9,12 +9,12 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/containers/gvisor-tap-vsock/pkg/apilog"
 	"github.com/containers/gvisor-tap-vsock/pkg/sshclient"
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"github.com/inetaf/tcpproxy"
@@ -70,8 +70,9 @@ func NewPortsForwarder(s *stack.Stack) *PortsForwarder {
 func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote string) error {
 	f.proxiesLock.Lock()
 	defer f.proxiesLock.Unlock()
+
 	if _, ok := f.proxies[key(protocol, local)]; ok {
-		return errors.New("proxy already running")
+		return fmt.Errorf("proxy already running for %s on %s", protocol, local)
 	}
 
 	switch protocol {
@@ -160,10 +161,6 @@ func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote 
 		switch protocol {
 		case types.UNIX:
 			p.ListenFunc = func(_, socketPath string) (net.Listener, error) {
-				// remove existing socket file
-				if err := os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
-					return nil, err
-				}
 				return net.Listen("unix", socketPath) // override tcp to use unix socket
 			}
 		case types.NPIPE:
@@ -184,7 +181,12 @@ func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote 
 		}
 		go func() {
 			if err := p.Wait(); err != nil {
-				log.Error(err)
+				// ignore "connection closed" errors as when calling `Proxy.Close()` at exit,
+				// it’s expected that we get:
+				// `accept unix /some/path: use of closed network connection`
+				if !errors.Is(err, net.ErrClosed) {
+					log.Error(err)
+				}
 			}
 		}()
 		f.proxies[key(protocol, local)] = proxy{
@@ -212,8 +214,12 @@ func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote 
 		if err != nil {
 			return err
 		}
-		p, err := NewUDPProxy(listener, func() (net.Conn, error) {
-			return gonet.DialUDP(f.stack, nil, &address, ipv4.ProtocolNumber)
+		p, err := NewUDPProxy(listener, func(from net.Addr) (net.Conn, error) {
+			var bindAddr *tcpip.FullAddress
+			if a, ok := from.(*net.UDPAddr); ok {
+				bindAddr = sourceBindAddr(a.IP, a.Port)
+			}
+			return gonet.DialUDP(f.stack, bindAddr, &address, ipv4.ProtocolNumber)
 		})
 		if err != nil {
 			return err
@@ -235,7 +241,13 @@ func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote 
 		p.AddRoute(local, &tcpproxy.DialProxy{
 			Addr: remote,
 			DialContext: func(ctx context.Context, _, _ string) (conn net.Conn, e error) {
-				return gonet.DialContextTCP(ctx, f.stack, address, ipv4.ProtocolNumber)
+				var bindAddr tcpip.FullAddress
+				if a, ok := ctx.Value(tcpproxy.SourceAddrContextKey).(*net.TCPAddr); ok {
+					if b := sourceBindAddr(a.IP, a.Port); b != nil {
+						bindAddr = *b
+					}
+				}
+				return gonet.DialTCPWithBind(ctx, f.stack, bindAddr, address, ipv4.ProtocolNumber)
 			},
 		})
 		if err := p.Start(); err != nil {
@@ -273,9 +285,23 @@ func (f *PortsForwarder) Unexpose(protocol types.TransportProtocol, local string
 	return proxy.underlying.Close()
 }
 
+func (f *PortsForwarder) Close() error {
+	f.proxiesLock.Lock()
+	defer f.proxiesLock.Unlock()
+	for _, proxy := range f.proxies {
+		if err := proxy.underlying.Close(); err != nil {
+			log.Warnf("failed to close %v", proxy)
+		}
+	}
+	f.proxies = make(map[ProxyKey]proxy)
+	f.stack = nil
+
+	return nil
+}
+
 func (f *PortsForwarder) Mux() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/all", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/all", func(w http.ResponseWriter, r *http.Request) {
 		f.proxiesLock.Lock()
 		defer f.proxiesLock.Unlock()
 		ret := make([]proxy, 0)
@@ -288,7 +314,9 @@ func (f *PortsForwarder) Mux() http.Handler {
 			}
 			return ret[i].Local < ret[j].Local
 		})
-		_ = json.NewEncoder(w).Encode(ret)
+		if err := json.NewEncoder(w).Encode(ret); err != nil {
+			apilog.SetError(r, err)
+		}
 	})
 	mux.HandleFunc("/expose", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -317,6 +345,10 @@ func (f *PortsForwarder) Mux() http.Handler {
 			}
 		}
 
+		apilog.AddField(r, "protocol", req.Protocol)
+		apilog.AddField(r, "local", req.Local)
+		apilog.AddField(r, "remote", remoteAddr)
+
 		if err := f.Expose(req.Protocol, req.Local, remoteAddr); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -336,6 +368,10 @@ func (f *PortsForwarder) Mux() http.Handler {
 		if req.Protocol == "" {
 			req.Protocol = types.TCP
 		}
+
+		apilog.AddField(r, "protocol", req.Protocol)
+		apilog.AddField(r, "local", req.Local)
+
 		if err := f.Unexpose(req.Protocol, req.Local); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -359,6 +395,24 @@ func remote(req types.ExposeRequest, ip string) (string, error) {
 		return fmt.Sprintf("%s%s", host, req.Remote), nil
 	}
 	return req.Remote, nil
+}
+
+// sourceBindAddr returns the gvisor-stack bind address used to propagate a
+// client's source IP to the guest, or nil when the source IP must not be
+// propagated (so the caller falls back to the default gateway source).
+//
+// Loopback and unspecified addresses are skipped: the guest sends its replies
+// back to the source IP via the gateway, and gvisor drops those replies as
+// martian packets when their destination is a loopback address on the
+// (non-loopback) tap NIC. This notably covers host-local forwards such as
+// 127.0.0.1:2222 -> 192.168.127.2:22.
+func sourceBindAddr(ip net.IP, port int) *tcpip.FullAddress {
+	v4 := ip.To4()
+	if v4 == nil || ip.IsLoopback() || ip.IsUnspecified() {
+		return nil
+	}
+	//#nosec G115 -- port originates from a net.Addr and always fits in a uint16
+	return &tcpip.FullAddress{NIC: 1, Addr: tcpip.AddrFrom4Slice(v4), Port: uint16(port)}
 }
 
 // helper function for parsed URL query strings

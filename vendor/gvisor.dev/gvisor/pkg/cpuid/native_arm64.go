@@ -18,7 +18,8 @@
 package cpuid
 
 import (
-	"io/ioutil"
+	"fmt"
+	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -41,6 +42,13 @@ func (fs FeatureSet) Fixed() FeatureSet {
 	return fs
 }
 
+// Intersect returns the intersection of features between self and allowedFeatures.
+//
+// Just return error as there is no ARM64 equivalent to cpuid.Static.Remove().
+func (fs FeatureSet) Intersect(allowedFeatures map[Feature]struct{}) (FeatureSet, error) {
+	return FeatureSet{}, fmt.Errorf("FeatureSet intersection is not supported on ARM64")
+}
+
 // Reads CPU information from host /proc/cpuinfo.
 //
 // Must run before syscall filter installation. This value is used to create
@@ -51,7 +59,7 @@ func initCPUInfo() {
 		// warn about them not existing.
 		return
 	}
-	cpuinfob, err := ioutil.ReadFile("/proc/cpuinfo")
+	cpuinfob, err := os.ReadFile("/proc/cpuinfo")
 	if err != nil {
 		// Leave everything at 0, nothing can be done.
 		log.Warningf("Could not read /proc/cpuinfo: %v", err)

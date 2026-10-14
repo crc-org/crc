@@ -3,6 +3,7 @@ package transport
 import (
 	"net"
 	"net/url"
+	"os"
 	"strconv"
 
 	mdlayhervsock "github.com/mdlayher/vsock"
@@ -28,7 +29,15 @@ func listenURL(parsed *url.URL) (net.Listener, error) {
 
 		return mdlayhervsock.Listen(uint32(port), nil)
 	case "unixpacket":
-		return net.Listen(parsed.Scheme, parsed.Path)
+		listener, err := net.Listen(parsed.Scheme, parsed.Path)
+		if err != nil {
+			return nil, err
+		}
+		if err := os.Chmod(parsed.Path, 0600); err != nil { // #nosec G703 - socket path from configured listen URL
+			_ = listener.Close()
+			return nil, err
+		}
+		return listener, nil
 	default:
 		return defaultListenURL(parsed)
 	}

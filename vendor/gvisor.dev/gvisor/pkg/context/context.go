@@ -43,6 +43,9 @@ type Blocker interface {
 	// Interrupted notes whether this context is Interrupted.
 	Interrupted() bool
 
+	// Killed returns true if this context is interrupted by a fatal signal.
+	Killed() bool
+
 	// BlockOn blocks until one of the previously registered events occurs,
 	// or some external interrupt (cancellation).
 	//
@@ -55,25 +58,32 @@ type Blocker interface {
 	// is interrupted.
 	Block(C <-chan struct{}) error
 
+	// BlockWithTimeout blocks until an event is received from C, the timeout
+	// has elapsed (only if haveTimeout is true), or some external interrupt.
+	//
+	// It returns:
+	//   - The remaining timeout, which is guaranteed to be 0 if the timeout
+	//     expired, and is unspecified if haveTimeout is false.
+	//   - An error which if the timeout expired or if interrupted.
+	BlockWithTimeout(C chan struct{}, haveTimeout bool, timeout time.Duration) (time.Duration, error)
+
 	// BlockWithTimeoutOn blocks until either the conditions of Block are
 	// satisfied, or the timeout is hit. Note that deadlines are not supported
 	// since the notion of "with respect to what clock" is not resolved.
 	//
-	// The return value is per BlockOn.
+	// It returns:
+	//   - The remaining timeout, which is guaranteed to be 0 if the timeout
+	//     expired.
+	//   - Boolean as per BlockOn return value.
 	BlockWithTimeoutOn(waiter.Waitable, waiter.EventMask, time.Duration) (time.Duration, bool)
 
 	// UninterruptibleSleepStart indicates the beginning of an uninterruptible
-	// sleep state (equivalent to Linux's TASK_UNINTERRUPTIBLE). If deactivate
-	// is true and the Context represents a Task, the Task's AddressSpace is
-	// deactivated.
-	UninterruptibleSleepStart(deactivate bool)
+	// sleep state (equivalent to Linux's TASK_UNINTERRUPTIBLE).
+	UninterruptibleSleepStart()
 
 	// UninterruptibleSleepFinish indicates the end of an uninterruptible sleep
-	// state that was begun by a previous call to UninterruptibleSleepStart. If
-	// activate is true and the Context represents a Task, the Task's
-	// AddressSpace is activated. Normally activate is the same value as the
-	// deactivate parameter passed to UninterruptibleSleepStart.
-	UninterruptibleSleepFinish(activate bool)
+	// state that was begun by a previous call to UninterruptibleSleepStart.
+	UninterruptibleSleepFinish()
 }
 
 // NoTask is an implementation of Blocker that does not block.
@@ -91,7 +101,12 @@ func (nt *NoTask) Interrupt() {
 
 // Interrupted implements Blocker.Interrupted.
 func (nt *NoTask) Interrupted() bool {
-	return nt.cancel != nil && len(nt.cancel) > 0
+	return len(nt.cancel) > 0
+}
+
+// Killed implements Blocker.Killed.
+func (nt *NoTask) Killed() bool {
+	return false
 }
 
 // Block implements Blocker.Block.
@@ -123,34 +138,47 @@ func (nt *NoTask) BlockOn(w waiter.Waitable, mask waiter.EventMask) bool {
 	}
 }
 
-// BlockWithTimeoutOn implements Blocker.BlockWithTimeoutOn.
-func (nt *NoTask) BlockWithTimeoutOn(w waiter.Waitable, mask waiter.EventMask, duration time.Duration) (time.Duration, bool) {
+// BlockWithTimeout implements Blocker.BlockWithTimeout.
+func (nt *NoTask) BlockWithTimeout(C chan struct{}, haveTimeout bool, timeout time.Duration) (time.Duration, error) {
+	if !haveTimeout {
+		return timeout, nt.Block(C)
+	}
+
 	if nt.cancel == nil {
 		nt.cancel = make(chan struct{}, 1)
 	}
-	e, ch := waiter.NewChannelEntry(mask)
-	w.EventRegister(&e)
-	defer w.EventUnregister(&e)
 	start := time.Now() // In system time.
-	t := time.AfterFunc(duration, func() { ch <- struct{}{} })
+	remainingTimeout := func() time.Duration {
+		rt := timeout - time.Since(start)
+		if rt < 0 {
+			rt = 0
+		}
+		return rt
+	}
 	select {
 	case <-nt.cancel:
-		return time.Since(start), false // Interrupted.
-	case _, ok := <-ch:
-		if ok && t.Stop() {
-			// Timer never fired.
-			return time.Since(start), ok
-		}
-		// Timer fired, remain is zero.
-		return time.Duration(0), ok
+		return remainingTimeout(), errors.New("interrupted system call") // Interrupted.
+	case <-C:
+		return remainingTimeout(), nil
+	case <-time.After(timeout):
+		return 0, errors.New("timeout expired")
 	}
 }
 
+// BlockWithTimeoutOn implements Blocker.BlockWithTimeoutOn.
+func (nt *NoTask) BlockWithTimeoutOn(w waiter.Waitable, mask waiter.EventMask, timeout time.Duration) (time.Duration, bool) {
+	e, ch := waiter.NewChannelEntry(mask)
+	w.EventRegister(&e)
+	defer w.EventUnregister(&e)
+	left, err := nt.BlockWithTimeout(ch, true, timeout)
+	return left, err == nil
+}
+
 // UninterruptibleSleepStart implmenents Blocker.UninterruptedSleepStart.
-func (*NoTask) UninterruptibleSleepStart(bool) {}
+func (*NoTask) UninterruptibleSleepStart() {}
 
 // UninterruptibleSleepFinish implmenents Blocker.UninterruptibleSleepFinish.
-func (*NoTask) UninterruptibleSleepFinish(bool) {}
+func (*NoTask) UninterruptibleSleepFinish() {}
 
 // Context represents a thread of execution (hereafter "goroutine" to reflect
 // Go idiosyncrasy). It carries state associated with the goroutine across API

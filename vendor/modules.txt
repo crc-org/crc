@@ -68,9 +68,6 @@ github.com/YourFin/binappend
 # github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 ## explicit
 github.com/acarl005/stripansi
-# github.com/apparentlymart/go-cidr v1.1.1
-## explicit
-github.com/apparentlymart/go-cidr/cidr
 # github.com/areYouLazy/libhosty v1.1.0
 ## explicit; go 1.16
 github.com/areYouLazy/libhosty
@@ -117,8 +114,9 @@ github.com/cloudflare/circl/sign/slhdsa
 github.com/cloudflare/circl/simd/keccakf1600
 github.com/cloudflare/circl/xof
 github.com/cloudflare/circl/xof/k12
-# github.com/containers/gvisor-tap-vsock v0.8.9
-## explicit; go 1.25.0
+# github.com/containers/gvisor-tap-vsock v0.9.0
+## explicit; go 1.26.0
+github.com/containers/gvisor-tap-vsock/pkg/apilog
 github.com/containers/gvisor-tap-vsock/pkg/client
 github.com/containers/gvisor-tap-vsock/pkg/fs
 github.com/containers/gvisor-tap-vsock/pkg/net/stdio
@@ -128,6 +126,7 @@ github.com/containers/gvisor-tap-vsock/pkg/services/dns
 github.com/containers/gvisor-tap-vsock/pkg/services/forwarder
 github.com/containers/gvisor-tap-vsock/pkg/sshclient
 github.com/containers/gvisor-tap-vsock/pkg/tap
+github.com/containers/gvisor-tap-vsock/pkg/tokenauth
 github.com/containers/gvisor-tap-vsock/pkg/transport
 github.com/containers/gvisor-tap-vsock/pkg/types
 github.com/containers/gvisor-tap-vsock/pkg/utils
@@ -368,7 +367,7 @@ github.com/hectane/go-acl/api
 # github.com/inconshreveable/mousetrap v1.1.0
 ## explicit; go 1.18
 github.com/inconshreveable/mousetrap
-# github.com/inetaf/tcpproxy v0.0.0-20250222171855-c4b9df066048
+# github.com/inetaf/tcpproxy v0.0.0-20260515195445-c159a6051109
 ## explicit; go 1.16
 github.com/inetaf/tcpproxy
 # github.com/insomniacslk/dhcp v0.0.0-20240710054256-ddd8a41251c9
@@ -443,8 +442,8 @@ github.com/mdlayher/vsock
 # github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 ## explicit
 github.com/mgutz/ansi
-# github.com/miekg/dns v1.1.72
-## explicit; go 1.24.0
+# github.com/miekg/dns v1.1.73
+## explicit; go 1.25.0
 github.com/miekg/dns
 # github.com/miekg/pkcs11 v1.1.2
 ## explicit; go 1.12
@@ -470,8 +469,6 @@ github.com/modern-go/reflect2
 # github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 ## explicit
 github.com/munnerz/goautoneg
-# github.com/nxadm/tail v1.4.11
-## explicit; go 1.13
 # github.com/onsi/ginkgo/v2 v2.33.1
 ## explicit; go 1.25.0
 github.com/onsi/ginkgo/v2
@@ -825,6 +822,9 @@ golang.org/x/crypto/sha3
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 golang.org/x/crypto/ssh/knownhosts
+# golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
+## explicit; go 1.20
+golang.org/x/exp/constraints
 # golang.org/x/mod v0.41.0
 ## explicit; go 1.26.0
 golang.org/x/mod/semver
@@ -839,6 +839,7 @@ golang.org/x/net/http/httpguts
 golang.org/x/net/http/httpproxy
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
+golang.org/x/net/icmp
 golang.org/x/net/idna
 golang.org/x/net/internal/httpcommon
 golang.org/x/net/internal/httpsfv
@@ -1039,8 +1040,8 @@ gopkg.in/natefinch/lumberjack.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# gvisor.dev/gvisor v0.0.0-20240916094835-a174eb65023f
-## explicit; go 1.22.0
+# gvisor.dev/gvisor v0.0.0-20260413194555-9680d69bf798
+## explicit; go 1.25.5
 gvisor.dev/gvisor/pkg/atomicbitops
 gvisor.dev/gvisor/pkg/bits
 gvisor.dev/gvisor/pkg/buffer

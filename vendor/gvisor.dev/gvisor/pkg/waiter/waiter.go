@@ -154,6 +154,15 @@ func (e *Entry) Init(eventListener EventListener, mask EventMask) {
 	e.mask = mask
 }
 
+// SetQueuedMask changes the entry mask.
+//
+// Preconditions: The Entry must be registered to the given Queue.
+func (e *Entry) SetQueuedMask(q *Queue, mask EventMask) {
+	q.mu.Lock()
+	e.mask = mask
+	q.mu.Unlock()
+}
+
 // Mask returns the entry mask.
 func (e *Entry) Mask() EventMask {
 	return e.mask
@@ -200,6 +209,12 @@ func NewFunctionEntry(mask EventMask, fn func(EventMask)) (e Entry) {
 	e.Init(functionNotifier(fn), mask)
 	return e
 }
+
+// NoopListener is an EventListener that does nothing.
+type NoopListener struct{}
+
+// NotifyEvent implements EventListener.NotifyEvent.
+func (NoopListener) NotifyEvent(mask EventMask) {}
 
 // Queue represents the wait queue where waiters can be added and
 // notifiers can notify them when events happen.
@@ -259,45 +274,23 @@ func (q *Queue) IsEmpty() bool {
 	return q.list.Front() == nil
 }
 
-// AlwaysReady implements the Waitable interface but is always ready. Embedding
-// this struct into another struct makes it implement the boilerplate empty
-// functions automatically.
-type AlwaysReady struct {
-}
-
-// Readiness always returns the input mask because this object is always ready.
-func (*AlwaysReady) Readiness(mask EventMask) EventMask {
-	return mask
-}
-
-// EventRegister doesn't do anything because this object doesn't need to issue
-// notifications because its readiness never changes.
-func (*AlwaysReady) EventRegister(*Entry) error {
-	return nil
-}
-
-// EventUnregister doesn't do anything because this object doesn't need to issue
-// notifications because its readiness never changes.
-func (*AlwaysReady) EventUnregister(e *Entry) {
-}
-
 // NeverReady implements the Waitable interface but is never ready. Otherwise,
 // this is exactly the same as AlwaysReady.
 type NeverReady struct {
 }
 
-// Readiness always returns the input mask because this object is always ready.
-func (*NeverReady) Readiness(mask EventMask) EventMask {
-	return mask
+// Readiness always returns 0 because this object is never ready.
+func (*NeverReady) Readiness(EventMask) EventMask {
+	return 0
 }
 
 // EventRegister doesn't do anything because this object doesn't need to issue
 // notifications because its readiness never changes.
-func (*NeverReady) EventRegister(e *Entry) error {
+func (*NeverReady) EventRegister(*Entry) error {
 	return nil
 }
 
 // EventUnregister doesn't do anything because this object doesn't need to issue
 // notifications because its readiness never changes.
-func (*NeverReady) EventUnregister(e *Entry) {
+func (*NeverReady) EventUnregister(*Entry) {
 }

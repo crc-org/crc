@@ -35,7 +35,7 @@ import (
 // +stateify savable
 type Endpoint struct {
 	// The following fields must only be set once then never changed.
-	stack       *stack.Stack `state:"manual"`
+	stack       *stack.Stack
 	ops         *tcpip.SocketOptions
 	netProto    tcpip.NetworkProtocolNumber
 	transProto  tcpip.TransportProtocolNumber
@@ -53,7 +53,7 @@ type Endpoint struct {
 	// +checklocks:mu
 	effectiveNetProto tcpip.NetworkProtocolNumber
 	// +checklocks:mu
-	connectedRoute *stack.Route `state:"manual"`
+	connectedRoute *stack.Route `state:"nosave"`
 	// +checklocks:mu
 	multicastMemberships map[multicastMembership]struct{}
 	// +checklocks:mu
@@ -66,13 +66,16 @@ type Endpoint struct {
 	// TODO(https://gvisor.dev/issue/6389): Use different fields for IPv4/IPv6.
 	// +checklocks:mu
 	multicastAddr tcpip.Address
-	// TODO(https://gvisor.dev/issue/6389): Use different fields for IPv4/IPv6.
 	// +checklocks:mu
 	multicastNICID tcpip.NICID
+	// +checklocks:mu
+	ipv6MulticastNICID tcpip.NICID
 	// +checklocks:mu
 	ipv4TOS uint8
 	// +checklocks:mu
 	ipv6TClass uint8
+	// +checklocks:mu
+	pmtud tcpip.PMTUDStrategy
 
 	// Lock ordering: mu > infoMu.
 	infoMu sync.RWMutex `state:"nosave"`
@@ -181,7 +184,11 @@ func (e *Endpoint) Close() {
 	}
 
 	for mem := range e.multicastMemberships {
-		e.stack.LeaveGroup(e.netProto, mem.nicID, mem.multicastAddr)
+		proto, err := e.multicastNetProto(mem.multicastAddr)
+		if err != nil {
+			panic("non multicast address in an existing membership")
+		}
+		e.stack.LeaveGroup(proto, mem.nicID, mem.multicastAddr)
 	}
 	e.multicastMemberships = nil
 
@@ -229,6 +236,7 @@ type WriteContext struct {
 	route *stack.Route
 	ttl   uint8
 	tos   uint8
+	df    bool
 }
 
 func (c *WriteContext) MTU() uint32 {
@@ -277,26 +285,23 @@ func (c *WriteContext) TryNewPacketBuffer(reserveHdrBytes int, data buffer.Buffe
 	return c.newPacketBufferLocked(reserveHdrBytes, data)
 }
 
-// TryNewPacketBufferFromPayloader returns a new packet buffer iff the endpoint's send buffer
+// TryNewPacketBufferFromPayloader returns a new packet buffer if the endpoint's send buffer
 // is not full. Otherwise, data from `payloader` isn't read.
-//
-// If this method returns nil, the caller should wait for the endpoint to become
-// writable.
-func (c *WriteContext) TryNewPacketBufferFromPayloader(reserveHdrBytes int, payloader tcpip.Payloader) *stack.PacketBuffer {
+func (c *WriteContext) TryNewPacketBufferFromPayloader(reserveHdrBytes int, payloader tcpip.Payloader) (*stack.PacketBuffer, tcpip.Error) {
 	e := c.e
 
 	e.sendBufferSizeInUseMu.Lock()
 	defer e.sendBufferSizeInUseMu.Unlock()
 
 	if !e.hasSendSpaceRLocked() {
-		return nil
+		return nil, &tcpip.ErrWouldBlock{}
 	}
 	var data buffer.Buffer
 	if _, err := data.WriteFromReader(payloader, int64(payloader.Len())); err != nil {
 		data.Release()
-		return nil
+		return nil, &tcpip.ErrBadBuffer{}
 	}
-	return c.newPacketBufferLocked(reserveHdrBytes, data)
+	return c.newPacketBufferLocked(reserveHdrBytes, data), nil
 }
 
 // +checklocks:c.e.sendBufferSizeInUseMu
@@ -310,6 +315,13 @@ func (c *WriteContext) newPacketBufferLocked(reserveHdrBytes int, data buffer.Bu
 	// This matches Linux behaviour:
 	// https://github.com/torvalds/linux/blob/38d741cb70b/include/net/sock.h#L2519
 	// https://github.com/torvalds/linux/blob/38d741cb70b/net/core/sock.c#L2588
+	var expOptVal uint16
+	if nic, err := c.e.stack.GetNICByID(c.route.OutgoingNIC()); err == nil && nic.GetExperimentIPOptionEnabled() {
+		expOptVal = c.e.ops.GetExperimentOptionValue()
+	}
+	if c.route.NetProto() == header.IPv6ProtocolNumber && expOptVal != 0 {
+		reserveHdrBytes += header.IPv6ExperimentHdrLength
+	}
 	pktSize := int64(reserveHdrBytes) + int64(data.Size())
 	e.sendBufferSizeInUse += pktSize
 
@@ -344,10 +356,17 @@ func (c *WriteContext) WritePacket(pkt *stack.PacketBuffer, headerIncluded bool)
 		return c.route.WriteHeaderIncludedPacket(pkt)
 	}
 
+	var expOptVal uint16
+	if nic, err := c.e.stack.GetNICByID(c.route.OutgoingNIC()); err == nil && nic.GetExperimentIPOptionEnabled() {
+		expOptVal = c.e.ops.GetExperimentOptionValue()
+	}
+
 	err := c.route.WritePacket(stack.NetworkHeaderParams{
-		Protocol: c.e.transProto,
-		TTL:      c.ttl,
-		TOS:      c.tos,
+		Protocol:              c.e.transProto,
+		TTL:                   c.ttl,
+		TOS:                   c.tos,
+		DF:                    c.df,
+		ExperimentOptionValue: expOptVal,
 	}, pkt)
 
 	if _, ok := err.(*tcpip.ErrNoBufferSpace); ok {
@@ -420,8 +439,8 @@ func (e *Endpoint) AcquireContextForWrite(opts tcpip.WriteOptions) (WriteContext
 	route := e.connectedRoute
 	to := opts.To
 	info := e.Info()
-	switch {
-	case to == nil:
+	switch to {
+	case nil:
 		// If the user doesn't specify a destination, they should have
 		// connected to another address.
 		if e.State() != transport.DatagramEndpointStateConnected {
@@ -553,11 +572,28 @@ func (e *Endpoint) AcquireContextForWrite(opts tcpip.WriteOptions) (WriteContext
 		panic(fmt.Sprintf("invalid protocol number = %d", netProto))
 	}
 
+	// Set the DF (Don't Fragment) bit based on the PMTUD strategy,
+	// matching TCP behavior in connect.go.
+	// Note: In gVisor, WANT and DO are treated identically (both set DF).
+	// Linux kernel differentiates them (WANT allows local fragmentation,
+	// DO returns EMSGSIZE), but gVisor's IPv4 layer always allows local
+	// fragmentation for locally-generated packets regardless of DF
+	// (see gvisor.dev/issue/5919).
+	//
+	// PROBE also sets DF, matching Linux ip_dont_fragment(). In Linux,
+	// PROBE differs from DO only in that it ignores incoming ICMP
+	// "Fragmentation Needed" messages (i.e. does not update the cached
+	// route PMTU). Since gVisor does not implement ICMP-based PMTU
+	// feedback for transport sockets, PROBE and DO are functionally
+	// equivalent here.
+	df := e.pmtud == tcpip.PMTUDiscoveryWant || e.pmtud == tcpip.PMTUDiscoveryDo || e.pmtud == tcpip.PMTUDiscoveryProbe
+
 	return WriteContext{
 		e:     e,
 		route: route,
 		ttl:   ttl,
 		tos:   tos,
+		df:    df,
 	}, nil
 }
 
@@ -600,13 +636,16 @@ func (e *Endpoint) connectRouteRLocked(nicID tcpip.NICID, localAddr tcpip.Addres
 			localAddr = tcpip.Address{}
 		}
 
-		if header.IsV4MulticastAddress(addr.Addr) || header.IsV6MulticastAddress(addr.Addr) {
+		if header.IsV4MulticastAddress(addr.Addr) {
 			if nicID == 0 {
 				nicID = e.multicastNICID
 			}
 			if localAddr == (tcpip.Address{}) && nicID == 0 {
 				localAddr = e.multicastAddr
 			}
+		}
+		if header.IsV6MulticastAddress(addr.Addr) && nicID == 0 {
+			nicID = e.ipv6MulticastNICID
 		}
 	}
 
@@ -822,9 +861,18 @@ func (e *Endpoint) GetRemoteAddress() (tcpip.FullAddress, bool) {
 func (e *Endpoint) SetSockOptInt(opt tcpip.SockOptInt, v int) tcpip.Error {
 	switch opt {
 	case tcpip.MTUDiscoverOption:
-		// Return not supported if the value is not disabling path
-		// MTU discovery.
-		if tcpip.PMTUDStrategy(v) != tcpip.PMTUDiscoveryDont {
+		// Store PMTU discovery settings. The DF bit on outgoing
+		// packets is set accordingly in AcquireContextForWrite.
+		// PROBE is accepted alongside DO/WANT/DONT. In Linux,
+		// PROBE sets DF but ignores ICMP-based PMTU updates;
+		// since gVisor lacks ICMP PMTU feedback, it behaves
+		// identically to DO.
+		switch tcpip.PMTUDStrategy(v) {
+		case tcpip.PMTUDiscoveryWant, tcpip.PMTUDiscoveryDont, tcpip.PMTUDiscoveryDo, tcpip.PMTUDiscoveryProbe:
+			e.mu.Lock()
+			e.pmtud = tcpip.PMTUDStrategy(v)
+			e.mu.Unlock()
+		default:
 			return &tcpip.ErrNotSupported{}
 		}
 
@@ -852,6 +900,18 @@ func (e *Endpoint) SetSockOptInt(opt tcpip.SockOptInt, v int) tcpip.Error {
 		e.mu.Lock()
 		e.ipv6TClass = uint8(v)
 		e.mu.Unlock()
+
+	case tcpip.IPv6MulticastInterfaceOption:
+		if v != 0 && !e.stack.CheckNIC(tcpip.NICID(v)) {
+			return &tcpip.ErrUnknownNICID{}
+		}
+		e.mu.Lock()
+		defer e.mu.Unlock()
+		nic := tcpip.NICID(v)
+		if info := e.Info(); info.BindNICID != 0 && info.BindNICID != nic {
+			return &tcpip.ErrInvalidEndpointState{}
+		}
+		e.ipv6MulticastNICID = nic
 	}
 
 	return nil
@@ -861,8 +921,10 @@ func (e *Endpoint) SetSockOptInt(opt tcpip.SockOptInt, v int) tcpip.Error {
 func (e *Endpoint) GetSockOptInt(opt tcpip.SockOptInt) (int, tcpip.Error) {
 	switch opt {
 	case tcpip.MTUDiscoverOption:
-		// The only supported setting is path MTU discovery disabled.
-		return int(tcpip.PMTUDiscoveryDont), nil
+		e.mu.Lock()
+		v := int(e.pmtud)
+		e.mu.Unlock()
+		return v, nil
 
 	case tcpip.MulticastTTLOption:
 		e.mu.Lock()
@@ -894,8 +956,27 @@ func (e *Endpoint) GetSockOptInt(opt tcpip.SockOptInt) (int, tcpip.Error) {
 		e.mu.RUnlock()
 		return v, nil
 
+	case tcpip.IPv6MulticastInterfaceOption:
+		e.mu.RLock()
+		v := int(e.ipv6MulticastNICID)
+		e.mu.RUnlock()
+		return v, nil
+
 	default:
 		return -1, &tcpip.ErrUnknownProtocolOption{}
+	}
+}
+
+// multicastNetProto returns the network protocol of a given multicast address.
+// Returns an error if the address is not a multicast address.
+func (e *Endpoint) multicastNetProto(addr tcpip.Address) (tcpip.NetworkProtocolNumber, tcpip.Error) {
+	switch {
+	case header.IsV4MulticastAddress(addr):
+		return header.IPv4ProtocolNumber, nil
+	case header.IsV6MulticastAddress(addr):
+		return header.IPv6ProtocolNumber, nil
+	default:
+		return 0, &tcpip.ErrInvalidOptionValue{}
 	}
 }
 
@@ -939,21 +1020,23 @@ func (e *Endpoint) SetSockOpt(opt tcpip.SettableSocketOption) tcpip.Error {
 		e.multicastAddr = addr
 
 	case *tcpip.AddMembershipOption:
-		if !(header.IsV4MulticastAddress(v.MulticastAddr) && e.netProto == header.IPv4ProtocolNumber) && !(header.IsV6MulticastAddress(v.MulticastAddr) && e.netProto == header.IPv6ProtocolNumber) {
-			return &tcpip.ErrInvalidOptionValue{}
+		// Allowing IP_ADD_MEMBERSHIP on an ipv6 socket matches Linux behavior:
+		// https://github.com/torvalds/linux/blob/cec1e6e5d1a/net/ipv6/ipv6_sockglue.c#L964
+		proto, err := e.multicastNetProto(v.MulticastAddr)
+		if err != nil {
+			return err
 		}
 
 		nicID := v.NIC
-
 		if v.InterfaceAddr.Unspecified() {
 			if nicID == 0 {
-				if r, err := e.stack.FindRoute(0, tcpip.Address{}, v.MulticastAddr, e.netProto, false /* multicastLoop */); err == nil {
+				if r, err := e.stack.FindRoute(0, tcpip.Address{}, v.MulticastAddr, proto, false /* multicastLoop */); err == nil {
 					nicID = r.NICID()
 					r.Release()
 				}
 			}
 		} else {
-			nicID = e.stack.CheckLocalAddress(nicID, e.netProto, v.InterfaceAddr)
+			nicID = e.stack.CheckLocalAddress(nicID, proto, v.InterfaceAddr)
 		}
 		if nicID == 0 {
 			return &tcpip.ErrUnknownDevice{}
@@ -968,27 +1051,28 @@ func (e *Endpoint) SetSockOpt(opt tcpip.SettableSocketOption) tcpip.Error {
 			return &tcpip.ErrPortInUse{}
 		}
 
-		if err := e.stack.JoinGroup(e.netProto, nicID, v.MulticastAddr); err != nil {
+		if err := e.stack.JoinGroup(proto, nicID, v.MulticastAddr); err != nil {
 			return err
 		}
 
 		e.multicastMemberships[memToInsert] = struct{}{}
 
 	case *tcpip.RemoveMembershipOption:
-		if !(header.IsV4MulticastAddress(v.MulticastAddr) && e.netProto == header.IPv4ProtocolNumber) && !(header.IsV6MulticastAddress(v.MulticastAddr) && e.netProto == header.IPv6ProtocolNumber) {
-			return &tcpip.ErrInvalidOptionValue{}
+		proto, err := e.multicastNetProto(v.MulticastAddr)
+		if err != nil {
+			return err
 		}
 
 		nicID := v.NIC
 		if v.InterfaceAddr.Unspecified() {
 			if nicID == 0 {
-				if r, err := e.stack.FindRoute(0, tcpip.Address{}, v.MulticastAddr, e.netProto, false /* multicastLoop */); err == nil {
+				if r, err := e.stack.FindRoute(0, tcpip.Address{}, v.MulticastAddr, proto, false /* multicastLoop */); err == nil {
 					nicID = r.NICID()
 					r.Release()
 				}
 			}
 		} else {
-			nicID = e.stack.CheckLocalAddress(nicID, e.netProto, v.InterfaceAddr)
+			nicID = e.stack.CheckLocalAddress(nicID, proto, v.InterfaceAddr)
 		}
 		if nicID == 0 {
 			return &tcpip.ErrUnknownDevice{}
@@ -1003,7 +1087,7 @@ func (e *Endpoint) SetSockOpt(opt tcpip.SettableSocketOption) tcpip.Error {
 			return &tcpip.ErrBadLocalAddress{}
 		}
 
-		if err := e.stack.LeaveGroup(e.netProto, nicID, v.MulticastAddr); err != nil {
+		if err := e.stack.LeaveGroup(proto, nicID, v.MulticastAddr); err != nil {
 			return err
 		}
 

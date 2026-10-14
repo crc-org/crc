@@ -15,11 +15,11 @@ import (
 )
 
 func UDP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mutex, ec2MetadataAccess bool) *udp.Forwarder {
-	return udp.NewForwarder(s, func(r *udp.ForwarderRequest) {
+	return udp.NewForwarder(s, func(r *udp.ForwarderRequest) bool {
 		localAddress := r.ID().LocalAddress
 
 		if (!ec2MetadataAccess) && linkLocal().Contains(localAddress) || (localAddress == header.IPv4Broadcast) {
-			return
+			return true
 		}
 
 		natLock.Lock()
@@ -37,10 +37,10 @@ func UDP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mute
 			} else {
 				log.Errorf("r.CreateEndpoint() = %v", tcpErr)
 			}
-			return
+			return false
 		}
 
-		p, _ := NewUDPProxy(&autoStoppingListener{underlying: gonet.NewUDPConn(&wq, ep)}, func() (net.Conn, error) {
+		p, _ := NewUDPProxy(&autoStoppingListener{underlying: gonet.NewUDPConn(&wq, ep)}, func(_ net.Addr) (net.Conn, error) {
 			return net.Dial("udp", net.JoinHostPort(localAddress.String(), strconv.Itoa(int(r.ID().LocalPort))))
 		})
 		go func() {
@@ -51,5 +51,6 @@ func UDP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mute
 			// forwarder request.
 			ep.Close()
 		}()
+		return true
 	})
 }

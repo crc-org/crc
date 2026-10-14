@@ -327,7 +327,7 @@ func Stacks(all bool) []byte {
 }
 
 // stackRegexp matches one level within a stack trace.
-var stackRegexp = regexp.MustCompile("(?m)^\\S+\\(.*\\)$\\r?\\n^\\t\\S+:\\d+.*$\\r?\\n")
+var stackRegexp = regexp.MustCompile(`(?m)^\S+\(.*\)$\r?\n^\t\S+:\d+.*$\r?\n`)
 
 // LocalStack returns the local goroutine stack, excluding the top N entries.
 // LocalStack's own entry is excluded by default and does not need to be counted in excludeTopN.
@@ -396,4 +396,6 @@ func CopyStandardLogTo(l Level) error {
 func init() {
 	// Store the initial value for the log.
 	log.Store(&BasicLogger{Level: Info, Emitter: GoogleEmitter{&Writer{Next: os.Stderr}}})
+
+	warnedSet = make(map[string]struct{})
 }

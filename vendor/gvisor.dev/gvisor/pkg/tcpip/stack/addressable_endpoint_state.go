@@ -602,7 +602,7 @@ func (a *AddressableEndpointState) AcquireAssignedAddressOrMatching(localAddr tc
 
 	// Proceed to add a new temporary endpoint.
 	addr := localAddr.WithPrefix()
-	ep, err := a.addAndAcquireAddressLocked(addr, AddressProperties{PEB: tempPEB}, Temporary)
+	ep, err := a.addAndAcquireAddressLocked(addr, AddressProperties{PEB: tempPEB, Temporary: true}, Temporary)
 	if err != nil {
 		// addAndAcquireAddressLocked only returns an error if the address is
 		// already assigned but we just checked above if the address exists so we
@@ -738,8 +738,6 @@ func (a *AddressableEndpointState) Cleanup() {
 var _ AddressEndpoint = (*addressState)(nil)
 
 // addressState holds state for an address.
-//
-// +stateify savable
 type addressState struct {
 	addressableEndpointState *AddressableEndpointState
 	addr                     tcpip.AddressWithPrefix
@@ -750,7 +748,7 @@ type addressState struct {
 	//
 	// AddressableEndpointState.mu
 	//   addressState.mu
-	mu   addressStateRWMutex `state:"nosave"`
+	mu   addressStateRWMutex
 	refs addressStateRefs
 	// checklocks:mu
 	kind AddressKind

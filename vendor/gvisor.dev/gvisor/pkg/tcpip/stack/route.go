@@ -180,7 +180,7 @@ func constructAndValidateRoute(netProto tcpip.NetworkProtocolNumber, addressEndp
 // AssignableAddressEndpoint.
 func makeRoute(netProto tcpip.NetworkProtocolNumber, gateway, localAddr, remoteAddr tcpip.Address, outgoingNIC, localAddressNIC *nic, localAddressEndpoint AssignableAddressEndpoint, handleLocal, multicastLoop bool, mtu uint32) *Route {
 	if localAddressNIC.stack != outgoingNIC.stack {
-		panic(fmt.Sprintf("cannot create a route with NICs from different stacks"))
+		panic("cannot create a route with NICs from different stacks")
 	}
 
 	if localAddr.BitLen() == 0 {
@@ -245,6 +245,14 @@ func makeRoute(netProto tcpip.NetworkProtocolNumber, gateway, localAddr, remoteA
 }
 
 func makeRouteInner(netProto tcpip.NetworkProtocolNumber, localAddr, remoteAddr tcpip.Address, outgoingNIC, localAddressNIC *nic, localAddressEndpoint AssignableAddressEndpoint, loop PacketLooping, mtu uint32) *Route {
+	if mtu != 0 {
+		adjusted := mtu - outgoingNIC.getNetworkEndpoint(netProto).EndpointHeaderSize()
+		if adjusted > mtu {
+			mtu = 0
+		} else {
+			mtu = adjusted
+		}
+	}
 	r := &Route{
 		routeInfo: routeInfo{
 			NetProto:         netProto,
@@ -337,11 +345,6 @@ func (r *Route) HasHostGSOCapability() bool {
 // HasSaveRestoreCapability returns true if the route supports save/restore.
 func (r *Route) HasSaveRestoreCapability() bool {
 	return r.outgoingNIC.NetworkLinkEndpoint.Capabilities()&CapabilitySaveRestore != 0
-}
-
-// HasDisconnectOkCapability returns true if the route supports disconnecting.
-func (r *Route) HasDisconnectOkCapability() bool {
-	return r.outgoingNIC.NetworkLinkEndpoint.Capabilities()&CapabilityDisconnectOk != 0
 }
 
 // GSOMaxSize returns the maximum GSO packet size.
@@ -525,6 +528,7 @@ func (r *Route) DefaultTTL() uint8 {
 // MTU returns the MTU of the route if present, otherwise the MTU of the underlying network endpoint.
 func (r *Route) MTU() uint32 {
 	if r.mtu > 0 {
+		// r.mtu is already adjusted to account for IP headers. See makeRouteInner.
 		return r.mtu
 	}
 	return r.outgoingNIC.getNetworkEndpoint(r.NetProto()).MTU()
