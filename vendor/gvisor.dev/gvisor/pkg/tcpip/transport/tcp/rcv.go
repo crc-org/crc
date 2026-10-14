@@ -21,7 +21,6 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 	"gvisor.dev/gvisor/pkg/tcpip/seqnum"
-	"gvisor.dev/gvisor/pkg/tcpip/stack"
 )
 
 // receiver holds the state necessary to receive TCP segments and turn them
@@ -29,7 +28,7 @@ import (
 //
 // +stateify savable
 type receiver struct {
-	stack.TCPReceiverState
+	TCPReceiverState
 	ep *Endpoint
 
 	// rcvWnd is the non-scaled receive window last advertised to the peer.
@@ -55,7 +54,7 @@ type receiver struct {
 func newReceiver(ep *Endpoint, irs seqnum.Value, rcvWnd seqnum.Size, rcvWndScale uint8) *receiver {
 	return &receiver{
 		ep: ep,
-		TCPReceiverState: stack.TCPReceiverState{
+		TCPReceiverState: TCPReceiverState{
 			RcvNxt:      irs + 1,
 			RcvAcc:      irs.Add(rcvWnd + 1),
 			RcvWndScale: rcvWndScale,
@@ -187,7 +186,6 @@ func (r *receiver) getSendParams() (RcvNxt seqnum.Value, rcvWnd seqnum.Size) {
 // in such cases we may need to send an ack to indicate to our peer that it can
 // resume sending data.
 // +checklocks:r.ep.mu
-// +checklocksalias:r.ep.snd.ep.mu=r.ep.mu
 func (r *receiver) nonZeroWindow() {
 	// Immediately send an ack.
 	r.ep.snd.sendAck()
@@ -200,7 +198,6 @@ func (r *receiver) nonZeroWindow() {
 // Returns true if the segment was consumed, false if it cannot be consumed
 // yet because of a missing segment.
 // +checklocks:r.ep.mu
-// +checklocksalias:r.ep.snd.ep.mu=r.ep.mu
 func (r *receiver) consumeSegment(s *segment, segSeq seqnum.Value, segLen seqnum.Size) bool {
 	if segLen > 0 {
 		// If the segment doesn't include the seqnum we're expecting to
@@ -354,7 +351,6 @@ func (r *receiver) updateRTT() {
 }
 
 // +checklocks:r.ep.mu
-// +checklocksalias:r.ep.snd.ep.mu=r.ep.mu
 func (r *receiver) handleRcvdSegmentClosing(s *segment, state EndpointState, closed bool) (drop bool, err tcpip.Error) {
 	r.ep.rcvQueueMu.Lock()
 	rcvClosed := r.ep.RcvClosed || r.closed
@@ -452,7 +448,6 @@ func (r *receiver) handleRcvdSegmentClosing(s *segment, state EndpointState, clo
 // handleRcvdSegment handles TCP segments directed at the connection managed by
 // r as they arrive. It is called by the protocol main loop.
 // +checklocks:r.ep.mu
-// +checklocksalias:r.ep.snd.ep.mu=r.ep.mu
 func (r *receiver) handleRcvdSegment(s *segment) (drop bool, err tcpip.Error) {
 	state := r.ep.EndpointState()
 	closed := r.ep.closed
@@ -548,7 +543,6 @@ func (r *receiver) handleRcvdSegment(s *segment) (drop bool, err tcpip.Error) {
 // handleTimeWaitSegment handles inbound segments received when the endpoint
 // has entered the TIME_WAIT state.
 // +checklocks:r.ep.mu
-// +checklocksalias:r.ep.snd.ep.mu=r.ep.mu
 func (r *receiver) handleTimeWaitSegment(s *segment) (resetTimeWait bool, newSyn bool) {
 	segSeq := s.sequenceNumber
 	segLen := seqnum.Size(s.payloadSize())

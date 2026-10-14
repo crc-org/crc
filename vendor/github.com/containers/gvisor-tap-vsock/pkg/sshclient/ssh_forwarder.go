@@ -6,13 +6,12 @@ import (
 	"io"
 	"net"
 	"net/url"
-	"os"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/containers/gvisor-tap-vsock/pkg/fs"
+	"github.com/containers/gvisor-tap-vsock/pkg/transport"
 	"github.com/containers/gvisor-tap-vsock/pkg/utils"
 	"github.com/sirupsen/logrus"
 )
@@ -111,16 +110,8 @@ func connectForward(ctx context.Context, bastion *Bastion) (CloseWriteConn, erro
 }
 
 func listenUnix(socketURI *url.URL) (net.Listener, error) {
-	path := socketURI.Path
-	if runtime.GOOS == "windows" {
-		path = strings.TrimPrefix(path, "/")
-	}
-
-	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
-		return nil, err
-	}
-
-	oldmask := fs.Umask(0177)
+	path := transport.UnixSocketPath(socketURI, runtime.GOOS)
+	oldmask := fs.Umask(0o177)
 	defer fs.Umask(oldmask)
 	listener, err := net.Listen("unix", path)
 	if err != nil {

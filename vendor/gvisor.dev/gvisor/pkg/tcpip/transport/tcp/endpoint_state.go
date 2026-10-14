@@ -19,12 +19,23 @@ import (
 	"fmt"
 
 	"gvisor.dev/gvisor/pkg/atomicbitops"
+	"gvisor.dev/gvisor/pkg/log"
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 	"gvisor.dev/gvisor/pkg/tcpip/ports"
+	"gvisor.dev/gvisor/pkg/tcpip/seqnum"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 )
+
+// logDisconnectOnce ensures we don't spam logs when many connections are terminated.
+var logDisconnectOnce sync.Once
+
+func logDisconnect() {
+	logDisconnectOnce.Do(func() {
+		log.Infof("One or more TCP connections terminated during save restore")
+	})
+}
 
 // beforeSave is invoked by stateify.
 func (e *Endpoint) beforeSave() {
@@ -38,16 +49,22 @@ func (e *Endpoint) beforeSave() {
 	switch {
 	case epState == StateInitial || epState == StateBound:
 	case epState.connected() || epState.handshake():
+		// Terminate valid connections only for restore.
 		if !e.route.HasSaveRestoreCapability() {
-			if !e.route.HasDisconnectOkCapability() {
-				panic(&tcpip.ErrSaveRejection{
-					Err: fmt.Errorf("endpoint cannot be saved in connected state: local %s:%d, remote %s:%d", e.TransportEndpointInfo.ID.LocalAddress, e.TransportEndpointInfo.ID.LocalPort, e.TransportEndpointInfo.ID.RemoteAddress, e.TransportEndpointInfo.ID.RemotePort),
-				})
+			if e.stack.GetRemoveConf() {
+				// Terminate the endpoint when resume=false.
+				logDisconnect()
+				e.terminateAtRestore = false
+				e.resetConnectionLocked(&tcpip.ErrConnectionAborted{})
+				e.mu.Unlock()
+				e.Close()
+				e.mu.Lock()
+			} else {
+				// This is set only when resume=true, the termination
+				// of this endpoint will happen during restore of the
+				// saved snapshot.
+				e.terminateAtRestore = true
 			}
-			e.resetConnectionLocked(&tcpip.ErrConnectionAborted{})
-			e.mu.Unlock()
-			e.Close()
-			e.mu.Lock()
 		}
 		fallthrough
 	case epState == StateListen:
@@ -95,8 +112,9 @@ var connectingLoading sync.WaitGroup
 func (e *Endpoint) loadState(_ context.Context, epState EndpointState) {
 	// This is to ensure that the loading wait groups include all applicable
 	// endpoints before any asynchronous calls to the Wait() methods.
-	// For restore purposes we treat TimeWait like a connected endpoint.
-	if epState.connected() || epState == StateTimeWait {
+	// For restore purposes we treat all endpoints with state after
+	// StateEstablished and before StateClosed like connected endpoint.
+	if epState.connected() {
 		connectedLoading.Add(1)
 	}
 	switch {
@@ -118,7 +136,46 @@ func (e *Endpoint) afterLoad(ctx context.Context) {
 	// Restore the endpoint to InitialState as it will be moved to
 	// its origEndpointState during Restore.
 	e.state = atomicbitops.FromUint32(uint32(StateInitial))
-	stack.RestoreStackFromContext(ctx).RegisterRestoredEndpoint(e)
+	if e.stack.IsSaveRestoreEnabled() {
+		e.stack.RegisterRestoredEndpoint(e)
+	} else {
+		stack.RestoreStackFromContext(ctx).RegisterRestoredEndpoint(e)
+	}
+}
+
+// Close the endpoint during restore if terminateAtRestore was set for the endpoint.
+func (e *Endpoint) closeEndpointAtRestore() {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	epState := EndpointState(e.origEndpointState)
+	if !epState.connected() && !epState.handshake() {
+		log.Debugf("endpoint was marked to terminate at restore in a wrong state, ID: %+v state: %v", e.ID, epState)
+		return
+	}
+
+	if epState.handshake() {
+		connectedLoading.Wait()
+		listenLoading.Wait()
+	}
+
+	// Put the endpoint in the error state and do cleanup. Do not
+	// attempt to send RST as route will be nil.
+	e.purgeReadQueue()
+	if epState.connected() {
+		e.purgeWriteQueue()
+		e.purgePendingRcvQueue()
+		e.cleanupLocked()
+	}
+	e.state.Store(uint32(StateError))
+	e.closeNoShutdownLocked()
+	tcpip.DeleteDanglingEndpoint(e)
+
+	if epState.connected() {
+		connectedLoading.Done()
+	} else {
+		connectingLoading.Done()
+	}
 }
 
 // Restore implements tcpip.RestoredEndpoint.Restore.
@@ -132,34 +189,49 @@ func (e *Endpoint) Restore(s *stack.Stack) {
 		snd.probeTimer.init(s.Clock(), timerHandler(e, e.snd.probeTimerExpired))
 		snd.corkTimer.init(s.Clock(), timerHandler(e, e.snd.corkTimerExpired))
 	}
-	e.stack = s
-	e.protocol = protocolFromStack(s)
+	saveRestoreEnabled := e.stack.IsSaveRestoreEnabled()
+	if !saveRestoreEnabled {
+		e.stack = s
+		e.protocol = protocolFromStack(s)
+	}
 	e.ops.InitHandler(e, e.stack, GetTCPSendBufferLimits, GetTCPReceiveBufferLimits)
 	e.segmentQueue.thaw()
+
+	e.mu.Lock()
+	id := e.ID
+	terminateAtRestore := e.terminateAtRestore
+	e.mu.Unlock()
 
 	bind := func() {
 		e.mu.Lock()
 		defer e.mu.Unlock()
-		addr, _, err := e.checkV4MappedLocked(tcpip.FullAddress{Addr: e.BindAddr, Port: e.TransportEndpointInfo.ID.LocalPort}, true /* bind */)
-		if err != nil {
-			panic("unable to parse BindAddr: " + err.String())
-		}
-		portRes := ports.Reservation{
-			Networks:     e.effectiveNetProtos,
-			Transport:    ProtocolNumber,
-			Addr:         addr.Addr,
-			Port:         addr.Port,
-			Flags:        e.boundPortFlags,
-			BindToDevice: e.boundBindToDevice,
-			Dest:         e.boundDest,
-		}
-		if ok := e.stack.ReserveTuple(portRes); !ok {
-			panic(fmt.Sprintf("unable to re-reserve tuple (%v, %q, %d, %+v, %d, %v)", e.effectiveNetProtos, addr.Addr, addr.Port, e.boundPortFlags, e.boundBindToDevice, e.boundDest))
+		if !saveRestoreEnabled {
+			addr, _, err := e.checkV4MappedLocked(tcpip.FullAddress{Addr: e.BindAddr, Port: e.TransportEndpointInfo.ID.LocalPort}, true /* bind */)
+			if err != nil {
+				panic("unable to parse BindAddr: " + err.String())
+			}
+			portRes := ports.Reservation{
+				Networks:     e.effectiveNetProtos,
+				Transport:    ProtocolNumber,
+				Addr:         addr.Addr,
+				Port:         addr.Port,
+				Flags:        e.boundPortFlags,
+				BindToDevice: e.boundBindToDevice,
+				Dest:         e.boundDest,
+			}
+			if ok := e.stack.ReserveTuple(portRes); !ok {
+				panic(fmt.Sprintf("unable to re-reserve tuple (%v, %q, %d, %+v, %d, %v)", e.effectiveNetProtos, addr.Addr, addr.Port, e.boundPortFlags, e.boundBindToDevice, e.boundDest))
+			}
 		}
 		e.isPortReserved = true
 
 		// Mark endpoint as bound.
 		e.setEndpointState(StateBound)
+	}
+
+	if terminateAtRestore {
+		e.closeEndpointAtRestore()
+		return
 	}
 
 	epState := EndpointState(e.origEndpointState)
@@ -182,10 +254,18 @@ func (e *Endpoint) Restore(s *stack.Stack) {
 		// Reset the scoreboard to reinitialize the sack information as
 		// we do not restore SACK information.
 		e.scoreboard.Reset()
+		if saveRestoreEnabled {
+			// Unregister the endpoint before registering again during Connect.
+			e.stack.UnregisterTransportEndpoint(e.effectiveNetProtos, header.TCPProtocolNumber, e.TransportEndpointInfo.ID, e, e.boundPortFlags, e.boundBindToDevice)
+		}
 		e.mu.Lock()
 		err := e.connect(tcpip.FullAddress{NIC: e.boundNICID, Addr: e.connectingAddress, Port: e.TransportEndpointInfo.ID.RemotePort}, false /* handshake */)
 		if _, ok := err.(*tcpip.ErrConnectStarted); !ok {
-			panic("endpoint connecting failed: " + err.String())
+			log.Warningf("TCP endpoint connect failed for connected endpoint with ID: %+v err: %v", id, err)
+			e.mu.Unlock()
+			e.Close()
+			connectedLoading.Done()
+			return
 		}
 		e.state.Store(e.origEndpointState)
 		// For FIN-WAIT-2 and TIME-WAIT we need to start the appropriate timers so
@@ -206,23 +286,39 @@ func (e *Endpoint) Restore(s *stack.Stack) {
 		connectedLoading.Done()
 	case epState == StateListen:
 		tcpip.AsyncLoading.Add(1)
-		go func() {
-			connectedLoading.Wait()
-			bind()
-			e.acceptMu.Lock()
-			backlog := e.acceptQueue.capacity
-			e.acceptMu.Unlock()
-			if err := e.Listen(backlog); err != nil {
-				panic("endpoint listening failed: " + err.String())
-			}
-			e.LockUser()
-			if e.shutdownFlags != 0 {
-				e.shutdownLocked(e.shutdownFlags)
-			}
-			e.UnlockUser()
-			listenLoading.Done()
-			tcpip.AsyncLoading.Done()
-		}()
+		if !saveRestoreEnabled {
+			go func() {
+				connectedLoading.Wait()
+				bind()
+				e.acceptMu.Lock()
+				backlog := e.acceptQueue.capacity
+				e.acceptMu.Unlock()
+				if err := e.Listen(backlog); err != nil {
+					panic("endpoint listening failed: " + err.String())
+				}
+				e.LockUser()
+				if e.shutdownFlags != 0 {
+					e.shutdownLocked(e.shutdownFlags)
+				}
+				e.UnlockUser()
+				listenLoading.Done()
+				tcpip.AsyncLoading.Done()
+			}()
+		} else {
+			go func() {
+				connectedLoading.Wait()
+				e.LockUser()
+				// All endpoints will be moved to initial state after
+				// restore. Set endpoint to its originial listen state.
+				e.setEndpointState(StateListen)
+				// Initialize the listening context.
+				rcvWnd := seqnum.Size(e.receiveBufferAvailable())
+				e.listenCtx = newListenContext(e.stack, e.protocol, e, rcvWnd, e.ops.GetV6Only(), e.NetProto)
+				e.UnlockUser()
+				listenLoading.Done()
+				tcpip.AsyncLoading.Done()
+			}()
+		}
 	case epState == StateConnecting:
 		// Initial SYN hasn't been sent yet so initiate a connect.
 		tcpip.AsyncLoading.Add(1)
@@ -232,32 +328,42 @@ func (e *Endpoint) Restore(s *stack.Stack) {
 			bind()
 			err := e.Connect(tcpip.FullAddress{NIC: e.boundNICID, Addr: e.connectingAddress, Port: e.TransportEndpointInfo.ID.RemotePort})
 			if _, ok := err.(*tcpip.ErrConnectStarted); !ok {
-				panic("endpoint connecting failed: " + err.String())
+				log.Warningf("TCP endpoint connect failed for connecting endpoint with ID: %+v err: %v", id, err)
+				e.Close()
 			}
 			connectingLoading.Done()
 			tcpip.AsyncLoading.Done()
 		}()
 	case epState == StateSynSent || epState == StateSynRecv:
-		connectedLoading.Wait()
-		listenLoading.Wait()
-		// Initial SYN has been sent/received so we should bind the
-		// ports start the retransmit timer for the SYNs and let it
-		// naturally complete the connection.
-		bind()
-		e.mu.Lock()
-		defer e.mu.Unlock()
-		e.setEndpointState(epState)
-		r, err := e.stack.FindRoute(e.boundNICID, e.TransportEndpointInfo.ID.LocalAddress, e.TransportEndpointInfo.ID.RemoteAddress, e.effectiveNetProtos[0], false /* multicastLoop */)
-		if err != nil {
-			panic(fmt.Sprintf("FindRoute failed when restoring endpoint w/ ID: %+v", e.ID))
-		}
-		e.route = r
-		timer, err := newBackoffTimer(e.stack.Clock(), InitialRTO, MaxRTO, timerHandler(e, e.h.retransmitHandlerLocked))
-		if err != nil {
-			panic(fmt.Sprintf("newBackOffTimer(_, %s, %s, _) failed: %s", InitialRTO, MaxRTO, err))
-		}
-		e.h.retransmitTimer = timer
-		connectingLoading.Done()
+		tcpip.AsyncLoading.Add(1)
+		go func() {
+			connectedLoading.Wait()
+			listenLoading.Wait()
+			// Initial SYN has been sent/received so we should bind the
+			// ports start the retransmit timer for the SYNs and let it
+			// naturally complete the connection.
+			bind()
+			e.mu.Lock()
+			e.setEndpointState(epState)
+			r, err := e.stack.FindRoute(e.boundNICID, e.TransportEndpointInfo.ID.LocalAddress, e.TransportEndpointInfo.ID.RemoteAddress, e.effectiveNetProtos[0], false /* multicastLoop */)
+			if err != nil {
+				e.mu.Unlock()
+				log.Warningf("FindRoute failed when restoring endpoint w/ ID: %+v err: %v", id, err)
+				e.Close()
+				connectingLoading.Done()
+				tcpip.AsyncLoading.Done()
+				return
+			}
+			e.route = r
+			timer, err := newBackoffTimer(e.stack.Clock(), InitialRTO, MaxRTO, timerHandler(e, e.h.retransmitHandlerLocked))
+			if err != nil {
+				panic(fmt.Sprintf("newBackOffTimer(_, %s, %s, _) failed: %s", InitialRTO, MaxRTO, err))
+			}
+			e.h.retransmitTimer = timer
+			connectingLoading.Done()
+			tcpip.AsyncLoading.Done()
+			e.mu.Unlock()
+		}()
 	case epState == StateBound:
 		tcpip.AsyncLoading.Add(1)
 		go func() {

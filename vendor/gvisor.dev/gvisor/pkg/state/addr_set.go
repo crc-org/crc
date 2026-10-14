@@ -384,7 +384,7 @@ func (s *addrSet) InsertWithoutMergingUnchecked(gap addrGapIterator, r addrRange
 	if splitMaxGap {
 		gap.node.updateMaxGapLeaf()
 	}
-	return addrIterator{gap.node, gap.index}
+	return addrIterator(gap)
 }
 
 // InsertRange inserts the given segment into the set. If the new segment can
@@ -513,7 +513,7 @@ func (s *addrSet) Remove(seg addrIterator) addrGapIterator {
 	if addrtrackGaps != 0 {
 		seg.node.updateMaxGapLeaf()
 	}
-	return seg.node.rebalanceAfterRemove(addrGapIterator{seg.node, seg.index})
+	return seg.node.rebalanceAfterRemove(addrGapIterator(seg))
 }
 
 // RemoveAll removes all segments from the set. All existing iterators are
@@ -530,21 +530,52 @@ func (s *addrSet) RemoveAll() {
 // if the caller needs to do additional work before removing each segment,
 // iterate segments and call Remove in a loop instead.
 func (s *addrSet) RemoveRange(r addrRange) addrGapIterator {
-	seg, gap := s.Find(r.Start)
-	if seg.Ok() {
-		seg = s.Isolate(seg, r)
-		gap = s.Remove(seg)
-	}
-	for seg = gap.NextSegment(); seg.Ok() && seg.Start() < r.End; seg = gap.NextSegment() {
-		seg = s.SplitAfter(seg, r.End)
-		gap = s.Remove(seg)
-	}
-	return gap
+	return s.RemoveRangeWith(r, nil)
 }
 
 // RemoveFullRange is equivalent to RemoveRange, except that if any key in the
 // given range does not correspond to a segment, RemoveFullRange panics.
 func (s *addrSet) RemoveFullRange(r addrRange) addrGapIterator {
+	return s.RemoveFullRangeWith(r, nil)
+}
+
+// RemoveRangeWith removes all segments in the given range. An iterator to the
+// newly formed gap is returned, and all existing iterators are invalidated.
+//
+// The function f is applied to each segment immediately before it is removed,
+// in order of ascending keys. Segments that lie partially outside r are split
+// before f is called, such that f only observes segments entirely within r.
+// Non-empty gaps between segments are skipped.
+//
+// RemoveRangeWith searches the set to find segments to remove. If the caller
+// already has an iterator to either end of the range of segments to remove, or
+// if the caller needs to do additional work before removing each segment,
+// iterate segments and call Remove in a loop instead.
+//
+// N.B. f must not invalidate iterators into s.
+func (s *addrSet) RemoveRangeWith(r addrRange, f func(seg addrIterator)) addrGapIterator {
+	seg, gap := s.Find(r.Start)
+	if seg.Ok() {
+		seg = s.Isolate(seg, r)
+		if f != nil {
+			f(seg)
+		}
+		gap = s.Remove(seg)
+	}
+	for seg = gap.NextSegment(); seg.Ok() && seg.Start() < r.End; seg = gap.NextSegment() {
+		seg = s.SplitAfter(seg, r.End)
+		if f != nil {
+			f(seg)
+		}
+		gap = s.Remove(seg)
+	}
+	return gap
+}
+
+// RemoveFullRangeWith is equivalent to RemoveRangeWith, except that if any key
+// in the given range does not correspond to a segment, RemoveFullRangeWith
+// panics.
+func (s *addrSet) RemoveFullRangeWith(r addrRange, f func(seg addrIterator)) addrGapIterator {
 	seg := s.FindSegment(r.Start)
 	if !seg.Ok() {
 		panic(fmt.Sprintf("missing segment at %v", r.Start))
@@ -552,6 +583,9 @@ func (s *addrSet) RemoveFullRange(r addrRange) addrGapIterator {
 	seg = s.SplitBefore(seg, r.Start)
 	for {
 		seg = s.SplitAfter(seg, r.End)
+		if f != nil {
+			f(seg)
+		}
 		end := seg.End()
 		gap := s.Remove(seg)
 		if r.End <= end {
@@ -562,6 +596,19 @@ func (s *addrSet) RemoveFullRange(r addrRange) addrGapIterator {
 			panic(fmt.Sprintf("missing segment at %v", end))
 		}
 	}
+}
+
+// MoveFrom moves all segments from s2 to s, replacing all existing segments in
+// s and leaving s2 empty.
+func (s *addrSet) MoveFrom(s2 *addrSet) {
+	*s = *s2
+	for _, child := range s.root.children {
+		if child == nil {
+			break
+		}
+		child.parent = &s.root
+	}
+	s2.RemoveAll()
 }
 
 // Merge attempts to merge two neighboring segments. If successful, Merge
@@ -817,11 +864,11 @@ func (s *addrSet) Isolate(seg addrIterator, r addrRange) addrIterator {
 // LowerBoundSegmentSplitBefore provides an iterator to the first segment to be
 // mutated, suitable as the initial value for a loop variable.
 func (s *addrSet) LowerBoundSegmentSplitBefore(min uintptr) addrIterator {
-	seg := s.LowerBoundSegment(min)
+	seg, gap := s.Find(min)
 	if seg.Ok() {
-		seg = s.SplitBefore(seg, min)
+		return s.SplitBefore(seg, min)
 	}
-	return seg
+	return gap.NextSegment()
 }
 
 // UpperBoundSegmentSplitAfter combines UpperBoundSegment and SplitAfter.
@@ -831,11 +878,11 @@ func (s *addrSet) LowerBoundSegmentSplitBefore(min uintptr) addrIterator {
 // UpperBoundSegmentSplitAfter provides an iterator to the first segment to be
 // mutated, suitable as the initial value for a loop variable.
 func (s *addrSet) UpperBoundSegmentSplitAfter(max uintptr) addrIterator {
-	seg := s.UpperBoundSegment(max)
+	seg, gap := s.Find(max)
 	if seg.Ok() {
-		seg = s.SplitAfter(seg, max)
+		return s.SplitAfter(seg, max)
 	}
-	return seg
+	return gap.PrevSegment()
 }
 
 // VisitRange applies the function f to all segments intersecting the range r,
@@ -1575,7 +1622,7 @@ func (seg addrIterator) PrevGap() addrGapIterator {
 
 		return seg.node.children[seg.index].lastSegment().NextGap()
 	}
-	return addrGapIterator{seg.node, seg.index}
+	return addrGapIterator(seg)
 }
 
 // NextGap returns the gap immediately after the iterated segment.
@@ -1867,26 +1914,26 @@ func (n *addrnode) String() string {
 func (n *addrnode) writeDebugString(buf *bytes.Buffer, prefix string) {
 	if n.hasChildren != (n.nrSegments > 0 && n.children[0] != nil) {
 		buf.WriteString(prefix)
-		buf.WriteString(fmt.Sprintf("WARNING: inconsistent value of hasChildren: got %v, want %v\n", n.hasChildren, !n.hasChildren))
+		fmt.Fprintf(buf, "WARNING: inconsistent value of hasChildren: got %v, want %v\n", n.hasChildren, !n.hasChildren)
 	}
 	for i := 0; i < n.nrSegments; i++ {
 		if child := n.children[i]; child != nil {
 			cprefix := fmt.Sprintf("%s- % 3d ", prefix, i)
 			if child.parent != n || child.parentIndex != i {
 				buf.WriteString(cprefix)
-				buf.WriteString(fmt.Sprintf("WARNING: inconsistent linkage to parent: got (%p, %d), want (%p, %d)\n", child.parent, child.parentIndex, n, i))
+				fmt.Fprintf(buf, "WARNING: inconsistent linkage to parent: got (%p, %d), want (%p, %d)\n", child.parent, child.parentIndex, n, i)
 			}
 			child.writeDebugString(buf, fmt.Sprintf("%s- % 3d ", prefix, i))
 		}
 		buf.WriteString(prefix)
 		if n.hasChildren {
 			if addrtrackGaps != 0 {
-				buf.WriteString(fmt.Sprintf("- % 3d: %v => %v, maxGap: %d\n", i, n.keys[i], n.values[i], n.maxGap.Get()))
+				fmt.Fprintf(buf, "- % 3d: %v => %v, maxGap: %d\n", i, n.keys[i], n.values[i], n.maxGap.Get())
 			} else {
-				buf.WriteString(fmt.Sprintf("- % 3d: %v => %v\n", i, n.keys[i], n.values[i]))
+				fmt.Fprintf(buf, "- % 3d: %v => %v\n", i, n.keys[i], n.values[i])
 			}
 		} else {
-			buf.WriteString(fmt.Sprintf("- % 3d: %v => %v\n", i, n.keys[i], n.values[i]))
+			fmt.Fprintf(buf, "- % 3d: %v => %v\n", i, n.keys[i], n.values[i])
 		}
 	}
 	if child := n.children[n.nrSegments]; child != nil {

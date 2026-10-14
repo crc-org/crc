@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/inetaf/tcpproxy"
 	log "github.com/sirupsen/logrus"
@@ -15,10 +16,21 @@ import (
 	"gvisor.dev/gvisor/pkg/waiter"
 )
 
-const linkLocalSubnet = "169.254.0.0/16"
+const (
+	linkLocalSubnet = "169.254.0.0/16"
 
-func TCP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mutex, ec2MetadataAccess bool) *tcp.Forwarder {
-	return tcp.NewForwarder(s, 0, 10, func(r *tcp.ForwarderRequest) {
+	defaultTCPMaxInFlight    = 128
+	defaultTCPConnectTimeout = 30 * time.Second
+)
+
+func TCP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mutex, ec2MetadataAccess bool, maxInFlight int, connectTimeout time.Duration) *tcp.Forwarder {
+	if maxInFlight <= 0 {
+		maxInFlight = defaultTCPMaxInFlight
+	}
+	if connectTimeout <= 0 {
+		connectTimeout = defaultTCPConnectTimeout
+	}
+	return tcp.NewForwarder(s, 0, maxInFlight, func(r *tcp.ForwarderRequest) {
 		localAddress := r.ID().LocalAddress
 
 		if (!ec2MetadataAccess) && linkLocal().Contains(localAddress) {
@@ -31,9 +43,9 @@ func TCP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mute
 			localAddress = replaced
 		}
 		natLock.Unlock()
-		outbound, err := net.Dial("tcp", net.JoinHostPort(localAddress.String(), fmt.Sprint(r.ID().LocalPort)))
+		outbound, err := net.DialTimeout("tcp", net.JoinHostPort(localAddress.String(), fmt.Sprint(r.ID().LocalPort)), connectTimeout)
 		if err != nil {
-			log.Tracef("net.Dial() = %v", err)
+			log.Tracef("net.DialTimeout() = %v", err)
 			r.Complete(true)
 			return
 		}

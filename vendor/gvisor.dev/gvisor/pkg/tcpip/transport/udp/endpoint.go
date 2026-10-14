@@ -61,7 +61,7 @@ type endpoint struct {
 
 	// The following fields are initialized at creation time and do not
 	// change throughout the lifetime of the endpoint.
-	stack       *stack.Stack `state:"manual"`
+	stack       *stack.Stack
 	waiterQueue *waiter.Queue
 	net         network.Endpoint
 	stats       tcpip.TransportEndpointStats
@@ -160,11 +160,16 @@ func (e *endpoint) Abort() {
 // associated with it.
 func (e *endpoint) Close() {
 	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.closeLocked()
+}
 
+// Preconditions: e.mu is locked.
+// +checklocks:e.mu
+func (e *endpoint) closeLocked() {
 	switch state := e.net.State(); state {
 	case transport.DatagramEndpointStateInitial:
 	case transport.DatagramEndpointStateClosed:
-		e.mu.Unlock()
 		return
 	case transport.DatagramEndpointStateBound, transport.DatagramEndpointStateConnected:
 		id := e.net.Info().ID
@@ -201,7 +206,6 @@ func (e *endpoint) Close() {
 	e.net.Shutdown()
 	e.net.Close()
 	e.readShutdown = true
-	e.mu.Unlock()
 
 	e.waiterQueue.Notify(waiter.EventHUp | waiter.EventErr | waiter.ReadableEvents | waiter.WritableEvents)
 }
@@ -289,6 +293,10 @@ func (e *endpoint) Read(dst io.Writer, opts tcpip.ReadOptions) (tcpip.ReadResult
 	}
 	if opts.NeedRemoteAddr {
 		res.RemoteAddr = p.senderAddress
+	}
+	if opts.NeedReceivedExperimentOption {
+		expOptVal, _ := p.pkt.ExperimentOptionValue()
+		res.ReceivedExperimentOption = expOptVal
 	}
 
 	n, err := p.pkt.Data().ReadTo(dst, opts.Peek)
@@ -459,9 +467,9 @@ func (e *endpoint) write(p tcpip.Payloader, opts tcpip.WriteOptions) (int64, tcp
 
 	dataSz := p.Len()
 	pktInfo := udpInfo.ctx.PacketInfo()
-	pkt := udpInfo.ctx.TryNewPacketBufferFromPayloader(header.UDPMinimumSize+int(pktInfo.MaxHeaderLength), p)
-	if pkt == nil {
-		return 0, &tcpip.ErrWouldBlock{}
+	pkt, err := udpInfo.ctx.TryNewPacketBufferFromPayloader(header.UDPMinimumSize+int(pktInfo.MaxHeaderLength), p)
+	if err != nil {
+		return 0, err
 	}
 	defer pkt.DecRef()
 
@@ -952,7 +960,9 @@ func (e *endpoint) HandlePacket(id stack.TransportEndpointID, pkt *stack.PacketB
 			Addr: id.LocalAddress,
 			Port: hdr.DestinationPort(),
 		},
-		pkt: pkt.IncRef(),
+		// We need to clone the packet because ReadTo modifies the write index of
+		// the underlying buffer. Clone does not copy the data, just the metadata.
+		pkt: pkt.Clone(),
 	}
 	e.rcvList.PushBack(packet)
 	e.rcvBufSize += pkt.Data().Size()

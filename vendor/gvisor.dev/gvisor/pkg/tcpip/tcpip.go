@@ -35,7 +35,6 @@ import (
 	"io"
 	"math"
 	"math/bits"
-	"math/rand"
 	"net"
 	"reflect"
 	"strconv"
@@ -43,16 +42,15 @@ import (
 	"time"
 
 	"gvisor.dev/gvisor/pkg/atomicbitops"
+	"gvisor.dev/gvisor/pkg/rand"
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/waiter"
 )
 
 // Using the header package here would cause an import cycle.
 const (
-	ipv4AddressSize    = 4
-	ipv4ProtocolNumber = 0x0800
-	ipv6AddressSize    = 16
-	ipv6ProtocolNumber = 0x86dd
+	ipv4AddressSize = 4
+	ipv6AddressSize = 16
 )
 
 const (
@@ -712,6 +710,10 @@ type ReadOptions struct {
 	// NeedLinkPacketInfo indicates whether to return the link-layer information,
 	// if supported.
 	NeedLinkPacketInfo bool
+
+	// NeedRecvdExperimentOption indicates whether to return the experiment
+	// option value from the last received packet, if supported.
+	NeedReceivedExperimentOption bool
 }
 
 // ReadResult represents result for a successful Endpoint.Read.
@@ -732,6 +734,10 @@ type ReadResult struct {
 	// LinkPacketInfo is the link-layer information of the received packet if
 	// ReadOptions.NeedLinkPacketInfo is true.
 	LinkPacketInfo LinkPacketInfo
+
+	// ReceivedExperimentOption is the experiment option value from the last
+	// received packet if ReadOptions.NeedReceivedExperimentOption is true.
+	ReceivedExperimentOption uint16
 }
 
 // Endpoint is the interface implemented by transport protocols (e.g., tcp, udp)
@@ -949,9 +955,8 @@ const (
 
 	// MTUDiscoverOption is used to set/get the path MTU discovery setting.
 	//
-	// NOTE: Setting this option to any other value than PMTUDiscoveryDont
-	// is not supported and will fail as such, and getting this option will
-	// always return PMTUDiscoveryDont.
+	// The value controls whether the Don't Fragment (DF) bit is set on
+	// outgoing IPv4 packets.
 	MTUDiscoverOption
 
 	// MulticastTTLOption is used by SetSockOptInt/GetSockOptInt to control
@@ -996,6 +1001,17 @@ const (
 	// IPv6Checksum is used to request the stack to populate and validate the IPv6
 	// checksum for transport level headers.
 	IPv6Checksum
+
+	// PacketMMapVersionOption is used to set the packet mmap version.
+	PacketMMapVersionOption
+
+	// PacketMMapReserveOption is used to set the packet mmap reserved space
+	// between the aligned header and the payload.
+	PacketMMapReserveOption
+
+	// IPv6MulticastInterfaceOption is used to set/get the NIC used for
+	// IPv6 multicast Tx.
+	IPv6MulticastInterfaceOption
 )
 
 const (
@@ -1184,6 +1200,30 @@ func (f *ICMPv6Filter) ShouldDeny(icmpType uint8) bool {
 func (*ICMPv6Filter) isGettableSocketOption() {}
 
 func (*ICMPv6Filter) isSettableSocketOption() {}
+
+// TpacketReq is the tpacket_req structure as described in
+// https://www.kernel.org/doc/Documentation/networking/packet_mmap.txt
+//
+// +stateify savable
+type TpacketReq struct {
+	TpBlockSize uint32
+	TpBlockNr   uint32
+	TpFrameSize uint32
+	TpFrameNr   uint32
+}
+
+func (*TpacketReq) isSettableSocketOption() {}
+
+// TpacketStats is the statistics for a packet_mmap ring buffer from
+// <linux/if_packet.h>.
+//
+// +stateify savable
+type TpacketStats struct {
+	Packets uint32
+	Dropped uint32
+}
+
+func (*TpacketStats) isGettableSocketOption() {}
 
 // EndpointState represents the state of an endpoint.
 type EndpointState uint8
@@ -1980,6 +2020,10 @@ type IPForwardingStats struct {
 	// Errors is the number of IP packets received which could not be
 	// successfully forwarded.
 	Errors *StatCounter
+
+	// OutgoingDeviceClosedForSend is the number of packets that were dropped due
+	// to the outgoing device being closed for send.
+	OutgoingDeviceClosedForSend *StatCounter
 
 	// LINT.ThenChange(network/internal/ip/stats.go:MultiCounterIPForwardingStats)
 }

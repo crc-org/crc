@@ -7,8 +7,10 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/containers/gvisor-tap-vsock/pkg/notification"
+	"github.com/containers/gvisor-tap-vsock/pkg/services/forwarder"
 	"github.com/containers/gvisor-tap-vsock/pkg/tap"
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"gvisor.dev/gvisor/pkg/tcpip"
@@ -22,29 +24,37 @@ import (
 )
 
 type VirtualNetwork struct {
-	configuration *types.Configuration
-	stack         *stack.Stack
-	networkSwitch *tap.Switch
-	servicesMux   http.Handler
-	ipPool        *tap.IPPool
+	configuration  *types.Configuration
+	stack          *stack.Stack
+	networkSwitch  *tap.Switch
+	servicesMux    http.Handler
+	ipPool         *tap.IPPool
+	portsForwarder *forwarder.PortsForwarder
+	apiToken       string // Bearer token for API authentication
 }
 
 func (n *VirtualNetwork) SetNotificationSender(notificationSender *notification.NotificationSender) {
 	n.networkSwitch.SetNotificationSender(notificationSender)
 }
 
-func New(configuration *types.Configuration) (*VirtualNetwork, error) {
-	_, subnet, err := net.ParseCIDR(configuration.Subnet)
-	if err != nil {
-		return nil, fmt.Errorf("cannot parse subnet cidr: %w", err)
-	}
+func (n *VirtualNetwork) SetAPIToken(token string) {
+	n.apiToken = token
+}
 
+func New(configuration *types.Configuration) (*VirtualNetwork, error) {
 	var endpoint stack.LinkEndpoint
 
-	ipPool := tap.NewIPPool(subnet)
-	ipPool.Reserve(net.ParseIP(configuration.GatewayIP), configuration.GatewayMacAddress)
+	ipPool, err := tap.NewIPPool(configuration.Subnet)
+	if err != nil {
+		return nil, fmt.Errorf("cannot parse subnet CIDR: %w", err)
+	}
+	if err := ipPool.Reserve(configuration.GatewayIP, configuration.GatewayMacAddress); err != nil {
+		return nil, fmt.Errorf("cannot reserve gateway IP: %w", err)
+	}
 	for ip, mac := range configuration.DHCPStaticLeases {
-		ipPool.Reserve(net.ParseIP(ip), mac)
+		if err := ipPool.Reserve(ip, mac); err != nil {
+			return nil, fmt.Errorf("cannot reserve static lease IP %s: %w", ip, err)
+		}
 	}
 
 	mtu := configuration.MTU
@@ -72,24 +82,32 @@ func New(configuration *types.Configuration) (*VirtualNetwork, error) {
 	} else {
 		endpoint = tapEndpoint
 	}
-
 	stack, err := createStack(configuration, endpoint)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create network stack: %w", err)
 	}
 
-	mux, err := addServices(configuration, stack, ipPool)
+	portsForwarder, err := createPortsForwarder(configuration, stack)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create ports forwarder: %w", err)
+	}
+	mux, err := addServices(configuration, stack, ipPool, portsForwarder)
 	if err != nil {
 		return nil, fmt.Errorf("cannot add network services: %w", err)
 	}
 
 	return &VirtualNetwork{
-		configuration: configuration,
-		stack:         stack,
-		networkSwitch: networkSwitch,
-		servicesMux:   mux,
-		ipPool:        ipPool,
+		configuration:  configuration,
+		stack:          stack,
+		networkSwitch:  networkSwitch,
+		servicesMux:    mux,
+		ipPool:         ipPool,
+		portsForwarder: portsForwarder,
 	}, nil
+}
+
+func (n *VirtualNetwork) Close() error {
+	return n.portsForwarder.Close()
 }
 
 func (n *VirtualNetwork) BytesSent() uint64 {
@@ -151,4 +169,20 @@ func createStack(configuration *types.Configuration, endpoint stack.LinkEndpoint
 	})
 
 	return s, nil
+}
+
+func createPortsForwarder(configuration *types.Configuration, s *stack.Stack) (*forwarder.PortsForwarder, error) {
+	fw := forwarder.NewPortsForwarder(s)
+	for local, remote := range configuration.Forwards {
+		if strings.HasPrefix(local, "udp:") {
+			if err := fw.Expose(types.UDP, strings.TrimPrefix(local, "udp:"), remote); err != nil {
+				return nil, err
+			}
+		} else {
+			if err := fw.Expose(types.TCP, local, remote); err != nil {
+				return nil, err
+			}
+		}
+	}
+	return fw, nil
 }

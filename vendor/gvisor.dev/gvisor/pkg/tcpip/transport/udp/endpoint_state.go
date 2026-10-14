@@ -16,9 +16,9 @@ package udp
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"gvisor.dev/gvisor/pkg/log"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 	"gvisor.dev/gvisor/pkg/tcpip/transport"
@@ -36,7 +36,11 @@ func (p *udpPacket) loadReceivedAt(_ context.Context, nsec int64) {
 
 // afterLoad is invoked by stateify.
 func (e *endpoint) afterLoad(ctx context.Context) {
-	stack.RestoreStackFromContext(ctx).RegisterRestoredEndpoint(e)
+	if e.stack.IsSaveRestoreEnabled() {
+		e.stack.RegisterRestoredEndpoint(e)
+	} else {
+		stack.RestoreStackFromContext(ctx).RegisterRestoredEndpoint(e)
+	}
 }
 
 // beforeSave is invoked by stateify.
@@ -47,13 +51,21 @@ func (e *endpoint) beforeSave() {
 
 // Restore implements tcpip.RestoredEndpoint.Restore.
 func (e *endpoint) Restore(s *stack.Stack) {
-	e.thaw()
-
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	e.net.Resume(s)
+	if err := e.net.Resume(s); err != nil {
+		log.Warningf("Closing the UDP endpoint as it cannot be restored, err: %v", err)
+		e.closeLocked()
+		return
+	}
 
+	// Unfreeze the endpoint to handle packets.
+	e.frozen = false
+	if e.stack.IsSaveRestoreEnabled() {
+		e.ops.InitHandler(e, e.stack, tcpip.GetStackSendBufferLimits, tcpip.GetStackReceiveBufferLimits)
+		return
+	}
 	e.stack = s
 	e.ops.InitHandler(e, e.stack, tcpip.GetStackSendBufferLimits, tcpip.GetStackReceiveBufferLimits)
 
@@ -69,12 +81,12 @@ func (e *endpoint) Restore(s *stack.Stack) {
 		id.RemotePort = e.remotePort
 		id, e.boundBindToDevice, err = e.registerWithStack(e.effectiveNetProtos, id)
 		if err != nil {
-			panic(err)
+			panic("registering udp endpoint with the stack failed during restore")
 		}
 		e.localPort = id.LocalPort
 		e.remotePort = id.RemotePort
 	default:
-		panic(fmt.Sprintf("unhandled state = %s", state))
+		panic("unhandled state")
 	}
 }
 

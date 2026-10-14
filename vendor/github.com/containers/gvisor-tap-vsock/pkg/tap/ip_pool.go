@@ -2,87 +2,87 @@ package tap
 
 import (
 	"errors"
-	"maps"
-	"math"
-	"net"
+	"net/netip"
 	"sync"
-
-	"github.com/apparentlymart/go-cidr/cidr"
 )
 
 type IPPool struct {
-	base   *net.IPNet
-	count  uint64
-	leases map[string]string
+	base   netip.Prefix
+	leases map[netip.Addr]string
 	lock   sync.Mutex
 }
 
-func NewIPPool(base *net.IPNet) *IPPool {
+func NewIPPool(subnet string) (*IPPool, error) {
+	base, err := netip.ParsePrefix(subnet)
+	if err != nil {
+		return nil, err
+	}
 	return &IPPool{
 		base:   base,
-		count:  cidr.AddressCount(base),
-		leases: make(map[string]string),
-	}
+		leases: make(map[netip.Addr]string),
+	}, nil
 }
 
 func (p *IPPool) Leases() map[string]string {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	leases := map[string]string{}
-	maps.Copy(leases, p.leases)
+	for ip, mac := range p.leases {
+		leases[ip.String()] = mac
+	}
 	return leases
 }
 
 func (p *IPPool) Mask() int {
-	ones, _ := p.base.Mask.Size()
-	return ones
+	return p.base.Bits()
 }
 
-func (p *IPPool) GetOrAssign(mac string) (net.IP, error) {
+func (p *IPPool) GetOrAssign(mac string) (netip.Addr, error) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
 	for ip, candidate := range p.leases {
 		if candidate == mac {
-			return net.ParseIP(ip), nil
+			return ip, nil
 		}
 	}
 
-	if p.count > math.MaxInt {
-		return nil, errors.New("IP pool exceeds maximum number of IP addresses")
-	}
-	for i := 1; i < int(p.count); i++ {
-		candidate, err := cidr.Host(p.base, i)
-		if err != nil {
-			continue
-		}
-		if _, ok := p.leases[candidate.String()]; !ok {
-			p.leases[candidate.String()] = mac
+	// Start from the first usable IP (network address + 1)
+	candidate := p.base.Masked().Addr().Next()
+
+	// Iterate through all IPs in the subnet
+	for candidate.IsValid() && p.base.Contains(candidate) {
+		if _, ok := p.leases[candidate]; !ok {
+			p.leases[candidate] = mac
 			return candidate, nil
 		}
+		candidate = candidate.Next()
 	}
-	return nil, errors.New("cannot find available IP")
+
+	return netip.Addr{}, errors.New("cannot find available IP")
 }
 
-func (p *IPPool) Reserve(ip net.IP, mac string) {
+func (p *IPPool) Reserve(ip string, mac string) error {
+	addr, err := netip.ParseAddr(ip)
+	if err != nil {
+		return err
+	}
+
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
-	p.leases[ip.String()] = mac
+	p.leases[addr] = mac
+	return nil
 }
 
 func (p *IPPool) Release(given string) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
-	var found string
 	for ip, mac := range p.leases {
 		if mac == given {
-			found = ip
+			delete(p.leases, ip)
 			break
 		}
-	}
-	if found != "" {
-		delete(p.leases, found)
 	}
 }

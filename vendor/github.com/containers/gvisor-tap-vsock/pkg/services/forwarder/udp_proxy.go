@@ -5,9 +5,9 @@ package forwarder
 
 import (
 	"encoding/binary"
+	"errors"
 	"io"
 	"net"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -52,13 +52,13 @@ type connTrackMap map[connTrackKey]net.Conn
 // addresses.
 type UDPProxy struct {
 	listener       udpConn
-	dialer         func() (net.Conn, error)
+	dialer         func(from net.Addr) (net.Conn, error)
 	connTrackTable connTrackMap
 	connTrackLock  sync.Mutex
 }
 
 // NewUDPProxy creates a new UDPProxy.
-func NewUDPProxy(listener udpConn, dialer func() (net.Conn, error)) (*UDPProxy, error) {
+func NewUDPProxy(listener udpConn, dialer func(from net.Addr) (net.Conn, error)) (*UDPProxy, error) {
 	return &UDPProxy{
 		listener:       listener,
 		connTrackTable: make(connTrackMap),
@@ -113,7 +113,7 @@ func (proxy *UDPProxy) Run() {
 			// NOTE: Apparently ReadFrom doesn't return
 			// ECONNREFUSED like Read do (see comment in
 			// UDPProxy.replyLoop)
-			if !isClosedError(err) {
+			if !errors.Is(err, net.ErrClosed) {
 				log.Debugf("Stopping udp proxy (%s)", err)
 			}
 			break
@@ -123,7 +123,7 @@ func (proxy *UDPProxy) Run() {
 		proxy.connTrackLock.Lock()
 		proxyConn, hit := proxy.connTrackTable[*fromKey]
 		if !hit {
-			proxyConn, err = proxy.dialer()
+			proxyConn, err = proxy.dialer(from)
 			if err != nil {
 				log.Errorf("Can't proxy a datagram to udp: %s\n", err)
 				proxy.connTrackLock.Unlock()
@@ -154,16 +154,6 @@ func (proxy *UDPProxy) Close() error {
 		conn.Close()
 	}
 	return nil
-}
-
-func isClosedError(err error) bool {
-	/* This comparison is ugly, but unfortunately, net.go doesn't export errClosing.
-	 * See:
-	 * http://golang.org/src/pkg/net/net.go
-	 * https://code.google.com/p/go/issues/detail?id=4337
-	 * https://groups.google.com/forum/#!msg/golang-nuts/0_aaCvBmOcM/SptmDyX1XJMJ
-	 */
-	return strings.HasSuffix(err.Error(), "use of closed network connection")
 }
 
 type udpConn interface {
