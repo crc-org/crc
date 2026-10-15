@@ -84,6 +84,47 @@ func NewAdminHelperCache() *Cache {
 	)
 }
 
+func NewGvproxyCache() *Cache {
+	url := constants.GetGvproxyURL()
+	version := version.GetGvproxyVersion()
+	cache := newCache(constants.GvproxyPath(),
+		url,
+		version,
+		func(executable string) (string, error) {
+			out, _, err := crcos.RunWithDefaultLocale(executable, "--version")
+			if err != nil {
+				return "", err
+			}
+			// gvproxy --version output format: "gvproxy version v0.8.7"
+			split := strings.Split(out, " ")
+			return strings.TrimSpace(split[len(split)-1]), nil
+		},
+	)
+	// upstream binary name is gvproxy-windows.exe/gvproxy-darwin/gvproxy-linux-<arch>
+	// but we want to name it as gvproxy on other OSes since it is expected by macadam,
+	// so we need to ignore the name mismatch
+	cache.ignoreNameMismatch = true
+	return cache
+}
+
+func NewMacadamCache() *Cache {
+	url := constants.GetMacadamURL()
+	version := version.GetMacadamVersion()
+	return newCache(constants.MacadamPath(),
+		url,
+		version,
+		func(executable string) (string, error) {
+			out, _, err := crcos.RunWithDefaultLocale(executable, "--version")
+			if err != nil {
+				return "", err
+			}
+			// macadam version output format: "macadam version v0.2.0"
+			split := strings.Split(out, " ")
+			return strings.TrimSpace(split[len(split)-1]), nil
+		},
+	)
+}
+
 func (c *Cache) IsCached() bool {
 	if _, err := os.Stat(c.GetExecutablePath()); os.IsNotExist(err) {
 		return false
