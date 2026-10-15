@@ -19,10 +19,13 @@ import (
 	"slices"
 	"strings"
 
-	"golang.org/x/tools/go/ast/astutil"
+	"golang.org/x/tools/go/ast/edge"
+	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/types/typeutil"
+	"golang.org/x/tools/internal/astutil"
 	internalastutil "golang.org/x/tools/internal/astutil"
 	"golang.org/x/tools/internal/astutil/free"
+	"golang.org/x/tools/internal/cursorutil"
 	"golang.org/x/tools/internal/packagepath"
 	"golang.org/x/tools/internal/refactor"
 	"golang.org/x/tools/internal/typeparams"
@@ -37,14 +40,15 @@ type Caller struct {
 	Fset  *token.FileSet
 	Types *types.Package
 	Info  *types.Info
-	File  *ast.File
-	Call  *ast.CallExpr
+	Call  inspector.Cursor // cursor for the *ast.CallExpr to be inlined
 
 	// CountUses is an optional optimized computation of
 	// the number of times pkgname appears in Info.Uses.
 	CountUses func(pkgname *types.PkgName) int
 
-	path          []ast.Node    // path from call to root of file syntax tree
+	// Derived from Call by Inline:
+	call          *ast.CallExpr // = Call.Node()
+	file          *ast.File     // file enclosing the call
 	enclosingFunc *ast.FuncDecl // top-level function/method enclosing the call, if any
 }
 
@@ -87,6 +91,15 @@ func Inline(caller *Caller, callee *Callee, opts *Options) (res *Result, err err
 		}()
 	}
 
+	// Derive the call, file, and outermost enclosing function,
+	// if any, from the cursor.
+	caller.call = caller.Call.Node().(*ast.CallExpr)
+	caller.file = astutil.EnclosingFile(caller.Call)
+	caller.enclosingFunc = nil
+	for cur := range caller.Call.Enclosing((*ast.FuncDecl)(nil)) {
+		caller.enclosingFunc = cur.Node().(*ast.FuncDecl)
+	}
+
 	st := &state{
 		caller: caller,
 		callee: callee,
@@ -106,10 +119,10 @@ func (st *state) inline() (*Result, error) {
 	logf, caller := st.opts.Logf, st.caller
 
 	logf("inline %s @ %v",
-		debugFormatNode(caller.Fset, caller.Call),
-		caller.Fset.PositionFor(caller.Call.Lparen, false))
+		debugFormatNode(caller.Fset, caller.call),
+		caller.Fset.PositionFor(caller.call.Lparen, false))
 
-	if ast.IsGenerated(caller.File) {
+	if ast.IsGenerated(caller.file) {
 		return nil, fmt.Errorf("cannot inline calls from generated files")
 	}
 
@@ -119,7 +132,7 @@ func (st *state) inline() (*Result, error) {
 	}
 
 	// Replace the call (or some node that encloses it) by new syntax.
-	assert(res.old != nil, "old is nil")
+	assert(res.old.Valid(), "old is invalid")
 	assert(res.new != nil, "new is nil")
 
 	// A single return operand inlined to a unary
@@ -144,8 +157,8 @@ func (st *state) inline() (*Result, error) {
 	// (replacing x by p+q would give p+q[y:z] which is wrong)
 	// but the y and z subtrees are safe.
 	if new, ok := res.new.(ast.Expr); ok {
-		parent := caller.path[slices.Index(caller.path, res.old)+1]
-		res.new = internalastutil.MaybeParenthesize(parent, res.old.(ast.Expr), new)
+		parent := res.old.Parent().Node()
+		res.new = internalastutil.MaybeParenthesize(parent, res.old.Node().(ast.Expr), new)
 	}
 
 	// Some reduction strategies return a new block holding the
@@ -163,10 +176,9 @@ func (st *state) inline() (*Result, error) {
 	elideBraces := res.elideBraces
 	if !elideBraces {
 		if newBlock, ok := res.new.(*ast.BlockStmt); ok {
-			i := slices.Index(caller.path, res.old)
-			parent := caller.path[i+1]
+			curParent := res.old.Parent()
 			var body []ast.Stmt
-			switch parent := parent.(type) {
+			switch parent := curParent.Node().(type) {
 			case *ast.BlockStmt:
 				body = parent.List
 			case *ast.CommClause:
@@ -188,7 +200,7 @@ func (st *state) inline() (*Result, error) {
 						}
 					}
 				}
-				switch f := caller.path[i+2].(type) {
+				switch f := curParent.Parent().Node().(type) {
 				case *ast.FuncDecl:
 					addFieldNames(f.Recv)
 					addFieldNames(f.Type.Params)
@@ -198,7 +210,7 @@ func (st *state) inline() (*Result, error) {
 					addFieldNames(f.Type.Results)
 				}
 
-				if len(callerLabels(caller.path)) > 0 {
+				if len(callerLabels(caller.Call)) > 0 {
 					// TODO(adonovan): be more precise and reject
 					// only forward gotos across the inlined block.
 					logf("keeping block braces: caller uses control labels")
@@ -247,8 +259,8 @@ func (st *state) inline() (*Result, error) {
 		}
 
 		edits = append(edits, refactor.Edit{
-			Pos:     res.old.Pos(),
-			End:     res.old.End(),
+			Pos:     res.old.Node().Pos(),
+			End:     res.old.Node().End(),
 			NewText: out.Bytes(),
 		})
 	}
@@ -266,7 +278,7 @@ func (st *state) inline() (*Result, error) {
 		if imp.explicit {
 			name = imp.name
 		}
-		edits = append(edits, refactor.AddImportEdits(caller.File, name, imp.path)...)
+		edits = append(edits, refactor.AddImportEdits(caller.file, name, imp.path)...)
 	}
 
 	literalized := false
@@ -274,52 +286,15 @@ func (st *state) inline() (*Result, error) {
 		literalized = true
 	}
 
-	// Delete imports referenced only by caller.Call.Fun.
+	// Delete imports referenced only by caller.call.Fun.
 	//
 	// It's ambiguous to let the client (e.g. analysis driver)
 	// remove unneeded imports in this case because it is common
 	// to inlining a call from "dir1/a".F to "dir2/a".F, which
 	// leaves two imports of packages named 'a', both providing a.F.
-	//
-	// However, the only two import deletion tools at our disposal
-	// are astutil.DeleteNamedImport, which mutates the AST, and
-	// refactor.Delete{Spec,Decl}, which need a Cursor. So we need
-	// to reinvent the wheel here.
+	tokFile := caller.Fset.File(caller.file.FileStart)
 	for _, oldImport := range res.oldImports {
-		spec := oldImport.spec
-
-		// Include adjacent comments.
-		pos := spec.Pos()
-		if doc := spec.Doc; doc != nil {
-			pos = doc.Pos()
-		}
-		end := spec.End()
-		if doc := spec.Comment; doc != nil {
-			end = doc.End()
-		}
-
-		// Find the enclosing import decl.
-		// If it's paren-less, we must delete it too.
-		for _, decl := range caller.File.Decls {
-			decl, ok := decl.(*ast.GenDecl)
-			if !(ok && decl.Tok == token.IMPORT) {
-				break // stop at first non-import decl
-			}
-			if internalastutil.NodeContainsPos(decl, spec.Pos()) && !decl.Rparen.IsValid() {
-				// Include adjacent comments.
-				pos = decl.Pos()
-				if doc := decl.Doc; doc != nil {
-					pos = doc.Pos()
-				}
-				end = decl.End()
-				break
-			}
-		}
-
-		edits = append(edits, refactor.Edit{
-			Pos: pos,
-			End: end,
-		})
+		edits = append(edits, refactor.DeleteSpec(tokFile, oldImport.curSpec)...)
 	}
 
 	return &Result{
@@ -332,7 +307,7 @@ func (st *state) inline() (*Result, error) {
 // An oldImport is an import that will be deleted from the caller file.
 type oldImport struct {
 	pkgName *types.PkgName
-	spec    *ast.ImportSpec
+	curSpec inspector.Cursor // cursor for *ast.ImportSpec
 }
 
 // A newImport is an import that will be added to the caller file.
@@ -348,7 +323,7 @@ type importState struct {
 	caller     *Caller
 	importMap  map[string][]string // from package paths in the caller's file to local names
 	newImports []newImport         // for references to free names in callee; to be added to the file
-	oldImports []oldImport         // referenced only by caller.Call.Fun; to be removed from the file
+	oldImports []oldImport         // referenced only by caller.call.Fun; to be removed from the file
 }
 
 // newImportState returns an importState with initial information about the caller's imports.
@@ -377,12 +352,13 @@ func newImportState(logf func(string, ...any), caller *Caller, callee *gobCallee
 		}
 	}
 
-	for _, imp := range caller.File.Imports {
+	for curSpec := range cursorutil.EnclosingFile(caller.Call).Preorder((*ast.ImportSpec)(nil)) {
+		imp := curSpec.Node().(*ast.ImportSpec)
 		if pkgName, ok := importedPkgName(caller.Info, imp); ok &&
 			pkgName.Name() != "." &&
 			pkgName.Name() != "_" {
 
-			// If the import's sole use is in caller.Call.Fun of the form p.F(...),
+			// If the import's sole use is in caller.call.Fun of the form p.F(...),
 			// where p.F is a qualified identifier, the p import may not be
 			// necessary.
 			//
@@ -394,7 +370,7 @@ func newImportState(logf func(string, ...any), caller *Caller, callee *gobCallee
 			// If that is the case, proactively check if any of the callee FreeObjs
 			// need this import. Doing so eagerly simplifies the resulting logic.
 			needed := true
-			if sel, ok := ast.Unparen(caller.Call.Fun).(*ast.SelectorExpr); ok &&
+			if sel, ok := ast.Unparen(caller.call.Fun).(*ast.SelectorExpr); ok &&
 				is[*ast.Ident](sel.X) &&
 				caller.Info.Uses[sel.X.(*ast.Ident)] == pkgName &&
 				countUses(pkgName) == 1 {
@@ -414,7 +390,7 @@ func newImportState(logf func(string, ...any), caller *Caller, callee *gobCallee
 				path := pkgName.Imported().Path()
 				ist.importMap[path] = append(ist.importMap[path], pkgName.Name())
 			} else {
-				ist.oldImports = append(ist.oldImports, oldImport{pkgName: pkgName, spec: imp})
+				ist.oldImports = append(ist.oldImports, oldImport{pkgName: pkgName, curSpec: curSpec})
 			}
 		}
 	}
@@ -517,8 +493,9 @@ type inlineCallResult struct {
 	// unfortunately in order to preserve comments, it is important that inlining
 	// replace as little syntax as possible.
 	elideBraces bool
-	bindingDecl bool     // transformation inserted "var params = args" declaration
-	old, new    ast.Node // e.g. replace call expr by callee function body expression
+	bindingDecl bool             // transformation inserted "var params = args" declaration
+	old         inspector.Cursor // the call, or a node enclosing it, to be replaced...
+	new         ast.Node         // ...by this new syntax (e.g. callee function body expression)
 }
 
 // inlineCall returns a pair of an old node (the call, or something
@@ -569,7 +546,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 
 	// Inlining of dynamic calls is not currently supported,
 	// even for local closure calls. (This would be a lot of work.)
-	calleeSymbol := typeutil.StaticCallee(caller.Info, caller.Call)
+	calleeSymbol := typeutil.StaticCallee(caller.Info, caller.call)
 	if calleeSymbol == nil {
 		// e.g. interface method
 		return nil, fmt.Errorf("cannot inline: not a static function call")
@@ -584,16 +561,6 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 	}
 
 	// -- analyze callee's free references in caller context --
-
-	// Compute syntax path enclosing Call, innermost first (Path[0]=Call),
-	// and outermost enclosing function, if any.
-	caller.path, _ = astutil.PathEnclosingInterval(caller.File, caller.Call.Pos(), caller.Call.End())
-	for _, n := range caller.path {
-		if decl, ok := n.(*ast.FuncDecl); ok {
-			caller.enclosingFunc = decl
-			break
-		}
-	}
 
 	// Extract information about the caller's imports.
 	istate := newImportState(logf, caller, callee)
@@ -619,7 +586,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 	// when both apply, we report the error the user cannot fix
 	// (e.g. a reference to an inaccessible package) rather than
 	// suggest upgrading the file's Go version, which would not help.
-	callerGoVersion := caller.Info.FileVersions[caller.File]
+	callerGoVersion := caller.Info.FileVersions[caller.file]
 	if callerGoVersion != "" && callee.GoVersion != "" && versions.Before(callerGoVersion, callee.GoVersion) {
 		return nil, fmt.Errorf("cannot inline call to %s (declared using %s) into a file using %s",
 			callee.Name, callee.GoVersion, callerGoVersion)
@@ -759,7 +726,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 					lastParamFieldType = lastParamField.Type
 				}
 
-				if caller.Call.Ellipsis.IsValid() {
+				if caller.call.Ellipsis.IsValid() {
 					// ellipsis call: f(slice...) -> f(slice)
 					// nop
 				} else {
@@ -800,7 +767,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 	// Substitute type parameters in calleeDecl AST with type arguments from the
 	// call, and synchronize the parameter metadata.
 	{
-		typeArgs := st.typeArguments(caller.Call)
+		typeArgs := st.typeArguments(caller.call)
 		if len(typeArgs) != len(callee.TypeParams) {
 			return nil, fmt.Errorf("cannot inline: type parameter inference is not yet supported")
 		}
@@ -829,7 +796,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 	updateCalleeParams(calleeDecl, params)
 
 	// Create a var (param = arg; ...) decl for use by some strategies.
-	bindingDecl := createBindingDecl(logf, caller, args, calleeDecl, callee.Results)
+	bindingDecl := createBindingDecl(logf, caller, args, params, calleeDecl, callee.Results)
 
 	var remainingArgs []ast.Expr
 	for _, arg := range args {
@@ -869,8 +836,8 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 		// Note(golang/go#71486): stmt can be nil if the call is in a go or defer
 		// statement.
 		// TODO: discard go or defer statements as well.
-		if stmt := callStmt(caller.path, false); stmt != nil {
-			res.old = stmt
+		if curStmt := callStmt(caller.Call, false); curStmt.Valid() {
+			res.old = curStmt
 			if nargs := len(remainingArgs); nargs > 0 {
 				// Emit "_, _ = args" to discard results.
 
@@ -955,10 +922,11 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 		len(calleeDecl.Body.List[0].(*ast.ReturnStmt).Results) > 0 { // not a bare return
 		results := calleeDecl.Body.List[0].(*ast.ReturnStmt).Results
 
-		parent, grandparent := callContext(caller.path)
+		curParent := cursorutil.UnparenEnclosing(caller.Call).Parent()
+		parent := curParent.Node()
 
 		// statement context
-		if stmt, ok := parent.(*ast.ExprStmt); ok &&
+		if is[*ast.ExprStmt](parent) &&
 			(!needBindingDecl || bindingDecl != nil) {
 			logf("strategy: reduce stmt-context call to { return exprs }")
 			clearPositions(calleeDecl.Body)
@@ -973,7 +941,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 				} else {
 					// Reduces to: { var (bindings); expr }
 					res.bindingDecl = true
-					res.old = stmt
+					res.old = curParent
 					res.new = &ast.BlockStmt{
 						List: []ast.Stmt{
 							bindingDecl.stmt,
@@ -992,7 +960,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 					Tok: token.ASSIGN,
 					Rhs: results,
 				}
-				res.old = stmt
+				res.old = curParent
 				if !needBindingDecl {
 					// Reduces to: _, _ = exprs
 					res.new = discard
@@ -1015,7 +983,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 		// If there is no binding decl, or if the binding decl declares no names,
 		// an assignment a, b := f() can be reduced to a, b := x, y.
 		if stmt, ok := parent.(*ast.AssignStmt); ok &&
-			is[*ast.BlockStmt](grandparent) &&
+			curParent.ParentEdgeKind() == edge.BlockStmt_List &&
 			(!needBindingDecl || (bindingDecl != nil && len(bindingDecl.names) == 0)) {
 
 			// Reduces to: { var (bindings); lhs... := rhs... }
@@ -1036,7 +1004,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 				// assignment only works if the replacement occurs in the same scope.
 				// Therefore, we must ensure that braces are elided.
 				res.elideBraces = true
-				res.old = stmt
+				res.old = curParent
 				res.new = block
 				return res, nil
 			}
@@ -1079,7 +1047,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 				//        printf(f())
 				// or spread return statement:
 				//        return f()
-				res.old = parent
+				res.old = curParent
 				switch context := parent.(type) {
 				case *ast.AssignStmt:
 					// Inv: the call must be in Rhs[0], not Lhs.
@@ -1129,17 +1097,13 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 	//
 	// The body may use defer, arbitrary control flow, and
 	// multiple returns.
-	//
-	// TODO(adonovan): add a strategy for a 'void tail
-	// call', i.e. a call statement prior to an (explicit
-	// or implicit) return.
-	parent, _ := callContext(caller.path)
-	if ret, ok := parent.(*ast.ReturnStmt); ok &&
+	curParent := cursorutil.UnparenEnclosing(caller.Call).Parent()
+	if ret, ok := curParent.Node().(*ast.ReturnStmt); ok &&
 		len(ret.Results) == 1 &&
 		tailCallSafeReturn(caller, calleeSymbol, callee) &&
 		!callee.HasBareReturn &&
 		(!needBindingDecl || bindingDecl != nil) &&
-		!hasLabelConflict(caller.path, callee.Labels) &&
+		!hasLabelConflict(caller.Call, callee.Labels) &&
 		allResultsUnreferenced {
 		logf("strategy: reduce tail-call")
 		body := calleeDecl.Body
@@ -1148,8 +1112,47 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 			res.bindingDecl = true
 			body.List = prepend(bindingDecl.stmt, body.List...)
 		}
-		res.old = ret
+		res.old = curParent
 		res.new = body
+		return res, nil
+	}
+
+	// Special case: void tail-call.
+	//
+	// Inlining:
+	//         f(args); return [pure]
+	//         f(args)  // last statement (implicit return)
+	// where:
+	//         func f(params) { stmts }  // may use defer
+	// reduces to replacing the call statement by the callee
+	// body (optionally with a binding decl). The following
+	// return, if any, is left unchanged.
+	//
+	// This is sound even if the callee uses defer, because the
+	// call is in tail position: deferred functions still run
+	// when the caller returns. If the return has operands, they
+	// must be pure so that evaluating them after the deferred
+	// calls are registered (rather than after they have run) is
+	// unobservable.
+	//
+	// Tail position includes a call whose next executed statement
+	// is a return, even when that return is not a sibling of the
+	// call (for example last-in-if, last-in-switch-case, or
+	// nested blocks). Last-in-loop is not tail position.
+	if curStmt := voidTailPosition(caller, assign1); curStmt.Valid() &&
+		(!needBindingDecl || bindingDecl != nil) &&
+		!hasLabelConflict(caller.Call, callee.Labels) &&
+		len(callee.Returns) == 0 {
+		logf("strategy: reduce void tail-call")
+		body := calleeDecl.Body
+		var repl ast.Stmt = body
+		clearPositions(repl)
+		if needBindingDecl {
+			res.bindingDecl = true
+			body.List = prepend(bindingDecl.stmt, body.List...)
+		}
+		res.old = curStmt
+		res.new = repl
 		return res, nil
 	}
 
@@ -1169,10 +1172,10 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 	// - all parameters and result vars can be eliminated
 	//   or replaced by a binding decl,
 	// - caller ExprStmt is in unrestricted statement context.
-	if stmt := callStmt(caller.path, true); stmt != nil &&
+	if curStmt := callStmt(caller.Call, true); curStmt.Valid() &&
 		(!needBindingDecl || bindingDecl != nil) &&
 		!callee.HasDefer &&
-		!hasLabelConflict(caller.path, callee.Labels) &&
+		!hasLabelConflict(caller.Call, callee.Labels) &&
 		len(callee.Returns) == 0 {
 		logf("strategy: reduce stmt-context call to { stmts }")
 		body := calleeDecl.Body
@@ -1181,7 +1184,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 		if needBindingDecl {
 			body.List = prepend(bindingDecl.stmt, body.List...)
 		}
-		res.old = stmt
+		res.old = curStmt
 		res.new = repl
 		return res, nil
 	}
@@ -1410,12 +1413,12 @@ func (st *state) typeArguments(call *ast.CallExpr) []*argument {
 func (st *state) arguments(caller *Caller, calleeDecl *ast.FuncDecl, assign1 func(*types.Var) bool) ([]*argument, error) {
 	var args []*argument
 
-	callArgs := caller.Call.Args
+	callArgs := caller.call.Args
 	if calleeDecl.Recv != nil {
 		if len(st.callee.impl.TypeParams) > 0 {
 			return nil, fmt.Errorf("cannot inline: generic methods not yet supported")
 		}
-		sel := ast.Unparen(caller.Call.Fun).(*ast.SelectorExpr)
+		sel := ast.Unparen(caller.call.Fun).(*ast.SelectorExpr)
 		seln := caller.Info.Selections[sel]
 		var recvArg ast.Expr
 		switch seln.Kind() {
@@ -1450,7 +1453,7 @@ func (st *state) arguments(caller *Caller, calleeDecl *ast.FuncDecl, assign1 fun
 				fld := typeparams.CoreType(typeparams.Deref(arg.typ)).(*types.Struct).Field(index)
 				if fld.Pkg() != caller.Types && !fld.Exported() {
 					return nil, fmt.Errorf("in %s, implicit reference to unexported field .%s cannot be made explicit",
-						debugFormatNode(caller.Fset, caller.Call.Fun),
+						debugFormatNode(caller.Fset, caller.call.Fun),
 						fld.Name())
 				}
 				if isPointer(arg.typ) {
@@ -1519,7 +1522,7 @@ func (st *state) arguments(caller *Caller, calleeDecl *ast.FuncDecl, assign1 fun
 			continue
 		}
 		info := &types.Info{Types: make(map[ast.Expr]types.TypeAndValue)}
-		if err := types.CheckExpr(caller.Fset, caller.Types, caller.Call.Pos(), arg.expr, info); err != nil {
+		if err := types.CheckExpr(caller.Fset, caller.Types, caller.call.Pos(), arg.expr, info); err != nil {
 			return nil, err
 		}
 		arg.typ = info.TypeOf(arg.expr)
@@ -1915,12 +1918,12 @@ func isNonTypeParamInterface(t types.Type) bool {
 	return !typeparams.IsTypeParam(t) && types.IsInterface(t)
 }
 
-// isUsedOutsideCall reports whether v is used outside of caller.Call, within
+// isUsedOutsideCall reports whether v is used outside of caller.call, within
 // the body of caller.enclosingFunc.
 func isUsedOutsideCall(caller *Caller, v *types.Var) bool {
 	used := false
 	ast.Inspect(caller.enclosingFunc.Body, func(n ast.Node) bool {
-		if n == caller.Call {
+		if n == caller.call {
 			return false
 		}
 		switch n := n.(type) {
@@ -2281,6 +2284,14 @@ type bindingDeclInfo struct {
 // reduces to:
 //
 //	{
+//	  p0, p1, p2 := a0, a1, a2
+//	  body
+//	}
+//
+// when each argument's default type is identical to its parameter
+// type. If a conversion is needed, the type is stated explicitly:
+//
+//	{
 //	  var (
 //	    p0, p1 T0 = a0, a1
 //	    p2     T1 = a2
@@ -2299,7 +2310,7 @@ type bindingDeclInfo struct {
 //
 // Strategies may impose additional checks on return
 // conversions, labels, defer, etc.
-func createBindingDecl(logf logger, caller *Caller, args []*argument, calleeDecl *ast.FuncDecl, results []*paramInfo) *bindingDeclInfo {
+func createBindingDecl(logf logger, caller *Caller, args []*argument, params []*parameter, calleeDecl *ast.FuncDecl, results []*paramInfo) *bindingDeclInfo {
 	// Spread calls are tricky as they may not align with the
 	// parameters' field groupings nor types.
 	// For example, given
@@ -2332,13 +2343,18 @@ func createBindingDecl(logf logger, caller *Caller, args []*argument, calleeDecl
 		// But Type is the untyped callee syntax,
 		// so we have to use a syntax-only algorithm.
 		const includeComplitIdents = true
-		free := free.Names(spec.Type, includeComplitIdents)
+		var frees map[string]bool
+		if spec.Type != nil {
+			frees = free.Names(spec.Type, includeComplitIdents)
+		} else {
+			frees = make(map[string]bool)
+		}
 		for _, value := range spec.Values {
 			for name := range freeVars(caller.Info, value) {
-				free[name] = true
+				frees[name] = true
 			}
 		}
-		for name := range free {
+		for name := range frees {
 			if names[name] {
 				logf("binding decl would shadow free name %q", name)
 				return true
@@ -2357,20 +2373,37 @@ func createBindingDecl(logf logger, caller *Caller, args []*argument, calleeDecl
 	// Bind parameters that were not eliminated through
 	// substitution. (Non-nil arguments correspond to the
 	// remaining parameters in calleeDecl.)
-	var values []ast.Expr
-	for _, arg := range args {
+	//
+	// Step 1: build ValueSpecs, omitting the explicit type when
+	// every argument in a param group already matches the
+	// parameter type (so var x = arg / x := arg is safe).
+	// Use types.Default so untyped constants get their default
+	// type; arg.constant alone is unreliable because it may still
+	// reflect the parameter's type from the original call context
+	// (e.g. untyped 1 passed to float64 has Kind Float).
+	var (
+		values   []ast.Expr
+		sameType []bool
+	)
+	for i, arg := range args {
 		if arg != nil {
 			values = append(values, arg.expr)
+			sameType = append(sameType, types.Identical(types.Default(arg.typ), params[i].obj.Type()))
 		}
 	}
 	for _, field := range calleeDecl.Type.Params.List {
-		// Each field (param group) becomes a ValueSpec.
+		n := len(field.Names)
+		var fieldType ast.Expr
+		if slices.Contains(sameType[:n], false) {
+			fieldType = cleanNode(field.Type)
+		}
 		spec := &ast.ValueSpec{
 			Names:  cleanNodes(field.Names),
-			Type:   cleanNode(field.Type),
-			Values: values[:len(field.Names)],
+			Type:   fieldType,
+			Values: values[:n],
 		}
-		values = values[len(field.Names):]
+		values = values[n:]
+		sameType = sameType[n:]
 		if shadow(spec) {
 			return nil
 		}
@@ -2380,8 +2413,8 @@ func createBindingDecl(logf logger, caller *Caller, args []*argument, calleeDecl
 
 	// results
 	//
-	// Add specs to declare any named result
-	// variables that are referenced by the body.
+	// Add specs to declare any named result variables referenced
+	// by the body, with explicit types as they have no initializers.
 	if calleeDecl.Type.Results != nil {
 		resultIdx := 0
 		for _, field := range calleeDecl.Type.Results.List {
@@ -2414,11 +2447,52 @@ func createBindingDecl(logf logger, caller *Caller, args []*argument, calleeDecl
 		return nil
 	}
 
-	stmt := &ast.DeclStmt{
-		Decl: &ast.GenDecl{
-			Tok:   token.VAR,
-			Specs: specs,
-		},
+	// If no spec requires an explicit type, flatten
+	//
+	//	var (
+	//		x, y = 1, 2
+	//		_    = ""
+	//	)
+	//
+	// into:
+	//
+	//	x, y, _ := 1, 2, ""
+	//
+	// (or _, _, _ = 1, 2, "" if no new names are introduced).
+	var (
+		lhs []ast.Expr
+		rhs []ast.Expr
+	)
+	for _, spec := range specs {
+		vs := spec.(*ast.ValueSpec)
+		if vs.Type != nil || len(vs.Values) == 0 {
+			lhs, rhs = nil, nil
+			break
+		}
+		for _, id := range vs.Names {
+			lhs = append(lhs, id)
+		}
+		rhs = append(rhs, vs.Values...)
+	}
+
+	var stmt ast.Stmt
+	if lhs == nil {
+		stmt = &ast.DeclStmt{
+			Decl: &ast.GenDecl{
+				Tok:   token.VAR,
+				Specs: specs,
+			},
+		}
+	} else {
+		tok := token.DEFINE
+		if len(names) == 0 { // no new names introduced (all "_")
+			tok = token.ASSIGN
+		}
+		stmt = &ast.AssignStmt{
+			Lhs: lhs,
+			Tok: tok,
+			Rhs: rhs,
+		}
 	}
 	logf("binding decl: %s", debugFormatNode(caller.Fset, stmt))
 	return &bindingDeclInfo{names: names, stmt: stmt}
@@ -2426,9 +2500,9 @@ func createBindingDecl(logf logger, caller *Caller, args []*argument, calleeDecl
 
 // lookup does a symbol lookup in the lexical environment of the caller.
 func (caller *Caller) lookup(name string) types.Object {
-	pos := caller.Call.Pos()
-	for _, n := range caller.path {
-		if scope := scopeFor(caller.Info, n); scope != nil {
+	pos := caller.call.Pos()
+	for cur := range caller.Call.Enclosing() {
+		if scope := scopeFor(caller.Info, cur.Node()); scope != nil {
 			if _, obj := scope.LookupParent(name, pos); obj != nil {
 				return obj
 			}
@@ -2800,27 +2874,11 @@ func isPkgLevel(obj types.Object) bool {
 	return obj.Pkg().Scope().Lookup(obj.Name()) == obj
 }
 
-// callContext returns the two nodes immediately enclosing the call
-// (specified as a PathEnclosingInterval), ignoring parens.
-func callContext(callPath []ast.Node) (parent, grandparent ast.Node) {
-	_ = callPath[0].(*ast.CallExpr) // sanity check
-	for _, n := range callPath[1:] {
-		if !is[*ast.ParenExpr](n) {
-			if parent == nil {
-				parent = n
-			} else {
-				return parent, n
-			}
-		}
-	}
-	return parent, nil
-}
-
 // hasLabelConflict reports whether the set of labels of the function
-// enclosing the call (specified as a PathEnclosingInterval)
+// enclosing the call (specified as a cursor)
 // intersects with the set of callee labels.
-func hasLabelConflict(callPath []ast.Node, calleeLabels []string) bool {
-	labels := callerLabels(callPath)
+func hasLabelConflict(curCall inspector.Cursor, calleeLabels []string) bool {
+	labels := callerLabels(curCall)
 	for _, label := range calleeLabels {
 		if labels[label] {
 			return true // conflict
@@ -2830,10 +2888,10 @@ func hasLabelConflict(callPath []ast.Node, calleeLabels []string) bool {
 }
 
 // callerLabels returns the set of control labels in the function (if
-// any) enclosing the call (specified as a PathEnclosingInterval).
-func callerLabels(callPath []ast.Node) map[string]bool {
+// any) enclosing the call (specified as a cursor).
+func callerLabels(curCall inspector.Cursor) map[string]bool {
 	var callerBody *ast.BlockStmt
-	switch f := callerFunc(callPath).(type) {
+	switch f := callerFunc(curCall).Node().(type) {
 	case *ast.FuncDecl:
 		callerBody = f.Body
 	case *ast.FuncLit:
@@ -2857,34 +2915,122 @@ func callerLabels(callPath []ast.Node) map[string]bool {
 	return labels
 }
 
-// callerFunc returns the innermost Func{Decl,Lit} node enclosing the
-// call (specified as a PathEnclosingInterval).
-func callerFunc(callPath []ast.Node) ast.Node {
-	_ = callPath[0].(*ast.CallExpr) // sanity check
-	for _, n := range callPath[1:] {
-		if is[*ast.FuncDecl](n) || is[*ast.FuncLit](n) {
-			return n
+// callerFunc returns the cursor for the innermost Func{Decl,Lit}
+// node enclosing the call (specified as a cursor), or the zero
+// Cursor if there is none. (The zero Cursor's Node is nil.)
+func callerFunc(curCall inspector.Cursor) inspector.Cursor {
+	_ = curCall.Node().(*ast.CallExpr) // sanity check
+	for cur := range curCall.Enclosing((*ast.FuncDecl)(nil), (*ast.FuncLit)(nil)) {
+		return cur
+	}
+	return inspector.Cursor{}
+}
+
+// voidTailPosition reports whether the call appears as an unrestricted
+// ExprStmt whose next executed statement is a return from the
+// enclosing function: either an explicit return whose results are all
+// pure, or an implicit return at the end of the function.
+//
+// It returns the cursor for the call's ExprStmt if so, or the zero
+// Cursor if the call is not in void tail position.
+//
+// The return need not be a sibling of the call. Nested blocks, if
+// branches, switch/type-switch/select cases, and stacked labels are
+// traversed so long as no intervening statement runs. Last-in-loop is
+// not tail position: the body may repeat.
+func voidTailPosition(caller *Caller, assign1 func(*types.Var) bool) inspector.Cursor {
+	curStmt := callStmt(caller.Call, true)
+	if !curStmt.Valid() {
+		return inspector.Cursor{}
+	}
+
+	// Walk up from the ExprStmt along parent edges.
+	//
+	// At each level, we ensure the current node is the last statement
+	// executed by its parent (or is immediately followed by a pure return):
+	// - Sequential lists (BlockStmt.List, CaseClause.Body, CommClause.Body)
+	//   check NextSibling for a pure return, otherwise continue upward.
+	// - Switch/select bodies hold Case/Comm clauses that do not execute
+	//   in sequence, so their BlockStmt_List edges skip the sibling check.
+	// - Single-child wrappers (IfStmt, SwitchStmt, LabeledStmt, …) continue up.
+	// - Reaching Func{Decl,Lit}_Body means an implicit return at function end.
+	// - Loops and any other construct are rejected.
+	for cur := curStmt; ; cur = cur.Parent() {
+		switch cur.ParentEdgeKind() {
+		case edge.BlockStmt_List, edge.CaseClause_Body, edge.CommClause_Body:
+			// switch x { // BlockStmt (SwitchStmt_Body)
+			// case 1:     // CaseClause (BlockStmt_List) — not sequential
+			//     f()     // ExprStmt (CaseClause_Body)
+			// }
+			// return
+			if cur.ParentEdgeKind() == edge.BlockStmt_List {
+				switch cur.Parent().ParentEdgeKind() {
+				case edge.SwitchStmt_Body, edge.TypeSwitchStmt_Body, edge.SelectStmt_Body:
+					continue // clauses don't execute sequentially
+				}
+			}
+			if next, ok := cur.NextSibling(); ok {
+				ret, ok := unlabel(next.Node().(ast.Stmt)).(*ast.ReturnStmt)
+				if !ok {
+					return inspector.Cursor{}
+				}
+				for _, res := range ret.Results {
+					if !pure(caller.Info, assign1, res) {
+						return inspector.Cursor{}
+					}
+				}
+				return curStmt
+			}
+			// Last in list: continue up to parent.
+
+		case edge.IfStmt_Body, edge.IfStmt_Else,
+			edge.SwitchStmt_Body, edge.TypeSwitchStmt_Body, edge.SelectStmt_Body,
+			edge.LabeledStmt_Stmt:
+			// Single-child wrappers: continue up.
+
+		case edge.FuncDecl_Body, edge.FuncLit_Body:
+			// Reached enclosing function: implicit return at function end.
+			return curStmt
+
+		default:
+			// Loops, files, or any other construct: not tail position.
+			return inspector.Cursor{}
 		}
 	}
-	return nil
+}
+
+// unlabel returns the inner statement for the possibly labeled statement stmt,
+// stripping any (possibly nested) *ast.LabeledStmt wrapper.
+//
+// TODO(hxjiang): find a good place for this func.
+func unlabel(stmt ast.Stmt) ast.Stmt {
+	for {
+		labelStmt, ok := stmt.(*ast.LabeledStmt)
+		if !ok {
+			return stmt
+		}
+		stmt = labelStmt.Stmt
+	}
 }
 
 // callStmt reports whether the function call (specified
-// as a PathEnclosingInterval) appears within an ExprStmt,
-// and returns it if so.
+// as a cursor) appears within an ExprStmt,
+// and returns its cursor if so, or the zero Cursor otherwise.
 //
-// If unrestricted, callStmt returns nil if the ExprStmt f() appears
-// in a restricted context (such as "if f(); cond {") where it cannot
-// be replaced by an arbitrary statement. (See "statement theory".)
-func callStmt(callPath []ast.Node, unrestricted bool) *ast.ExprStmt {
-	parent, _ := callContext(callPath)
-	stmt, ok := parent.(*ast.ExprStmt)
-	if ok && unrestricted {
-		switch callPath[slices.Index(callPath, ast.Node(stmt))+1].(type) {
-		case *ast.LabeledStmt,
-			*ast.BlockStmt,
-			*ast.CaseClause,
-			*ast.CommClause:
+// If unrestricted, callStmt returns the zero Cursor if the ExprStmt f()
+// appears in a restricted context (such as "if f(); cond {") where it
+// cannot be replaced by an arbitrary statement. (See "statement theory".)
+func callStmt(curCall inspector.Cursor, unrestricted bool) inspector.Cursor {
+	curStmt := cursorutil.UnparenEnclosing(curCall).Parent()
+	if !is[*ast.ExprStmt](curStmt.Node()) {
+		return inspector.Cursor{}
+	}
+	if unrestricted {
+		switch curStmt.ParentEdgeKind() {
+		case edge.LabeledStmt_Stmt,
+			edge.BlockStmt_List,
+			edge.CaseClause_Body,
+			edge.CommClause_Body:
 			// unrestricted
 		default:
 			// TODO(adonovan): handle restricted
@@ -2892,10 +3038,10 @@ func callStmt(callPath []ast.Node, unrestricted bool) *ast.ExprStmt {
 			// by creating a block around the if/for/switch:
 			// "if f(); cond {"  ->  "{ stmts; if cond {"
 
-			return nil // restricted
+			return inspector.Cursor{} // restricted
 		}
 	}
-	return stmt
+	return curStmt
 }
 
 // Statement theory
@@ -3308,7 +3454,7 @@ func (st *state) assignStmts(callerStmt *ast.AssignStmt, returnOperands []ast.Ex
 	const includeComplitIdents = true
 
 	for i, expr := range callerStmt.Rhs {
-		if expr == caller.Call {
+		if expr == caller.call {
 			assert(callIdx == -1, "malformed (duplicative) AST")
 			callIdx = i
 			for j, returnOperand := range returnOperands {
@@ -3550,16 +3696,11 @@ func tailCallSafeReturn(caller *Caller, calleeSymbol *types.Func, callee *gobCal
 	var callerType types.Type
 	// Find type of innermost function enclosing call.
 	// (Beware: Caller.enclosingFunc is the outermost.)
-loop:
-	for _, n := range caller.path {
-		switch f := n.(type) {
-		case *ast.FuncDecl:
-			callerType = caller.Info.ObjectOf(f.Name).Type()
-			break loop
-		case *ast.FuncLit:
-			callerType = caller.Info.TypeOf(f)
-			break loop
-		}
+	switch f := callerFunc(caller.Call).Node().(type) {
+	case *ast.FuncDecl:
+		callerType = caller.Info.ObjectOf(f.Name).Type()
+	case *ast.FuncLit:
+		callerType = caller.Info.TypeOf(f)
 	}
 
 	// Non-trivial return conversions in the callee are permitted
