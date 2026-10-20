@@ -582,8 +582,8 @@ github.com/russross/blackfriday/v2
 # github.com/sagikazarmark/locafero v0.11.0
 ## explicit; go 1.23.0
 github.com/sagikazarmark/locafero
-# github.com/sebrandon1/grab v1.2.1
-## explicit; go 1.26
+# github.com/sebrandon1/grab v1.2.2
+## explicit; go 1.26.0
 github.com/sebrandon1/grab/lib
 # github.com/secure-systems-lab/go-securesystemslib v0.11.0
 ## explicit; go 1.25.0
@@ -894,8 +894,8 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# golang.org/x/time v0.15.0
-## explicit; go 1.25.0
+# golang.org/x/time v0.16.0
+## explicit; go 1.26.0
 golang.org/x/time/rate
 # golang.org/x/tools v0.51.0
 ## explicit; go 1.26.0
