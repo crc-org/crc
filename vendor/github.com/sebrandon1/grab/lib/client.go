@@ -5,9 +5,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -50,7 +52,9 @@ type Client struct {
 	// (no retries).
 	RetryLimit int
 
-	// RetryDelay specifies the duration to wait between retry attempts.
+	// RetryDelay specifies the duration to wait between retry attempts. It is
+	// the minimum delay: after a 429 response, a server's Retry-After header
+	// (capped at 5 minutes) is honored instead when it asks for longer.
 	// Default: 0 (no delay).
 	RetryDelay time.Duration
 }
@@ -70,6 +74,42 @@ func NewClient() *Client {
 // DefaultClient is the default client and is used by all Get convenience
 // functions.
 var DefaultClient = NewClient()
+
+// SetTimeout sets the phase-level network timeout (connection dial, TLS
+// handshake, response headers) to d on the client's underlying http.Transport.
+// The total transfer time of a download is not limited, so a slow-but-alive
+// transfer of a large file is never killed.
+//
+// If the transport does not yet have a custom DialContext, one is installed
+// with both the timeout and a 30s TCP keep-alive (matching
+// http.DefaultTransport). If it already has one, only the TLS handshake and
+// response header timeouts are applied and dial behavior is left untouched.
+//
+// SetTimeout is a no-op when d is not positive, or when the client's
+// HTTPClient is not a *http.Client backed by a *http.Transport (such as a
+// test mock). Because it mutates the shared transport, it must be called
+// before the first request is sent.
+func (c *Client) SetTimeout(d time.Duration) {
+	if d <= 0 {
+		return
+	}
+	hc, ok := c.HTTPClient.(*http.Client)
+	if !ok {
+		return
+	}
+	tr, ok := hc.Transport.(*http.Transport)
+	if !ok {
+		return
+	}
+	tr.ResponseHeaderTimeout = d
+	tr.TLSHandshakeTimeout = d
+	if tr.DialContext == nil {
+		tr.DialContext = (&net.Dialer{
+			Timeout:   d,
+			KeepAlive: 30 * time.Second,
+		}).DialContext
+	}
+}
 
 // Do sends a file transfer request and returns a file transfer response,
 // following policy (e.g. redirects, cookies, auth) as configured on the
@@ -394,16 +434,57 @@ func isTransientStatusCode(code int) bool {
 	return false
 }
 
+// retryAfterCap bounds the delay honored from a server's Retry-After header,
+// so a hostile or buggy value cannot stall the transfer indefinitely.
+const retryAfterCap = 5 * time.Minute
+
+// retryAfter parses the Retry-After header (RFC 9110 §10.2.3): either a
+// number of seconds or an HTTP-date. It reports false if the header is
+// absent, unparseable, in the past, or beyond retryAfterCap.
+func retryAfter(h http.Header) (time.Duration, bool) {
+	v := h.Get("Retry-After")
+	if v == "" {
+		return 0, false
+	}
+	var d time.Duration
+	if secs, err := strconv.Atoi(v); err == nil {
+		d = time.Duration(secs) * time.Second
+	} else if date, err := http.ParseTime(v); err == nil {
+		d = time.Until(date)
+	} else {
+		return 0, false
+	}
+	if d < 0 || d > retryAfterCap {
+		return 0, false
+	}
+	return d, true
+}
+
 func (c *Client) getRequest(resp *Response) stateFunc {
 	for attempt := 0; attempt <= c.RetryLimit; attempt++ {
 		if attempt > 0 {
-			if resp.HTTPResponse != nil && resp.HTTPResponse.Body != nil {
-				_ = resp.HTTPResponse.Body.Close()
-				resp.HTTPResponse = nil
+			delay := c.RetryDelay
+			if resp.HTTPResponse != nil {
+				// Capture Retry-After from the previous 429 response before
+				// the response is closed and cleared for the next attempt.
+				if resp.HTTPResponse.StatusCode == http.StatusTooManyRequests {
+					if ra, ok := retryAfter(resp.HTTPResponse.Header); ok && ra > delay {
+						delay = ra
+					}
+				}
+				if resp.HTTPResponse.Body != nil {
+					_ = resp.HTTPResponse.Body.Close()
+					resp.HTTPResponse = nil
+				}
 			}
 			resp.err = nil
-			if c.RetryDelay > 0 {
-				time.Sleep(c.RetryDelay)
+			if delay > 0 {
+				select {
+				case <-resp.ctx.Done():
+					resp.err = resp.ctx.Err()
+					return c.closeResponse
+				case <-time.After(delay):
+				}
 			}
 		}
 
@@ -637,10 +718,10 @@ func (c *Client) closeResponse(resp *Response) stateFunc {
 
 	resp.fi = nil
 	closeWriter(resp)
-	if err := resp.closeResponseBody(); err != nil {
-		// optionally log or ignore
+	// The body-close error must not mask an earlier error, so it only
+	// surfaces when none exists.
+	if err := resp.closeResponseBody(); err != nil && resp.err == nil {
 		resp.err = fmt.Errorf("cannot close response body for %q: %w", resp.Filename, err)
-
 	}
 
 	resp.End = time.Now()
