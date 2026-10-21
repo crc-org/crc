@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"strings"
 	"text/template"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
@@ -75,6 +74,7 @@ type plistTemplateData struct {
 }
 
 var (
+	agentPidRegexp  = regexp.MustCompile(`(?m)^\s*pid = \d+$`)
 	launchAgentsDir = filepath.Join(constants.GetHomeDir(), "Library", "LaunchAgents")
 )
 
@@ -114,6 +114,10 @@ func domainForSessionType(sessionType string) string {
 		return fmt.Sprintf("gui/%d", goos.Getuid())
 	}
 	return fmt.Sprintf("user/%d", goos.Getuid())
+}
+
+func serviceTarget(label string) string {
+	return fmt.Sprintf("%s/%s", domainForSessionType(sessionType()), label)
 }
 
 func generatePlistContent(config AgentConfig) ([]byte, error) {
@@ -206,39 +210,30 @@ func RemovePlist(label string) error {
 
 // StartAgent starts a launchd agent
 func StartAgent(label string) error {
-	return runLaunchCtl("start", label)
+	return runLaunchCtl("kickstart", serviceTarget(label))
 }
 
 // StopAgent stops a launchd agent
 func StopAgent(label string) error {
-	return runLaunchCtl("stop", label)
+	return runLaunchCtl("kill", "SIGTERM", serviceTarget(label))
 }
 
 // RestartAgent restarts a launchd agent
 func RestartAgent(label string) error {
-	err := StopAgent(label)
-	if err != nil {
-		return err
-	}
-	return StartAgent(label)
+	// -k kills the running instance (if any) before restarting it
+	return runLaunchCtl("kickstart", "-k", serviceTarget(label))
 }
 
 // AgentRunning checks if a launchd service is running
 func AgentRunning(label string) bool {
-	// This command return a PID if the process
-	// is running, otherwise returns "-" or empty
-	// output if the agent is not loaded in launchd
-	launchctlListCommand := `launchctl list | grep %s | awk '{print $1}'`
-	cmd := fmt.Sprintf(launchctlListCommand, label)
-	out, _, err := os.RunWithDefaultLocale("bash", "-c", cmd)
+	// The service description contains a 'pid = <PID>' line
+	// if the process is running, and the command fails if the
+	// agent is not loaded in launchd
+	out, _, err := os.RunWithDefaultLocale("launchctl", "print", serviceTarget(label))
 	if err != nil {
 		return false
 	}
-	// match PID
-	if match, err := regexp.MatchString(`^\d+$`, strings.TrimSpace(string(out))); err == nil && match {
-		return true
-	}
-	return false
+	return agentPidRegexp.MatchString(out)
 }
 
 // Remove removes the agent from launchd

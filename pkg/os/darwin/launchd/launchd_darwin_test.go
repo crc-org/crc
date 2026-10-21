@@ -36,3 +36,8 @@ func TestDomainForSessionType(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("gui/%d", uid), domainForSessionType(aquaSessionType))
 	assert.Equal(t, fmt.Sprintf("user/%d", uid), domainForSessionType(backgroundSessionType))
 }
+
+func TestAgentPidRegexp(t *testing.T) {
+	assert.True(t, agentPidRegexp.MatchString("gui/501/crc.daemon = {\n\tactive count = 1\n\tstate = running\n\tpid = 1234\n}"))
+	assert.False(t, agentPidRegexp.MatchString("gui/501/crc.daemon = {\n\tactive count = 0\n\tstate = not running\n}"))
+}
