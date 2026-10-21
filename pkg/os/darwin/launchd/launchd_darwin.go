@@ -44,7 +44,7 @@ const (
 	<key>RunAtLoad</key>
 	<true/>
 	<key>LimitLoadToSessionType</key>
-	<string>Background</string>
+	<string>{{ .SessionType }}</string>
 </dict>
 </plist>
 `
@@ -58,6 +58,20 @@ type AgentConfig struct {
 	StdErrFilePath string
 	Args           []string
 	Env            map[string]string
+}
+
+const (
+	// aquaSessionType is the session type of a logged in GUI user. Agents
+	// running in it have access to the user's login keychain.
+	aquaSessionType = "Aqua"
+	// backgroundSessionType is used when no GUI session exists (e.g. SSH
+	// only access). The login keychain is not available in this session.
+	backgroundSessionType = "Background"
+)
+
+type plistTemplateData struct {
+	AgentConfig
+	SessionType string
 }
 
 var (
@@ -74,13 +88,45 @@ func getPlistPath(label string) string {
 	return filepath.Join(launchAgentsDir, plistName)
 }
 
+// guiSessionExists returns true if the current user has a GUI (Aqua) login
+// session, i.e. the 'gui/<uid>' launchd domain exists.
+func guiSessionExists() bool {
+	_, _, err := os.RunWithDefaultLocale("launchctl", "print", fmt.Sprintf("gui/%d", goos.Getuid()))
+	return err == nil
+}
+
+// sessionType returns the launchd session type the agent should be limited to.
+// The CRC daemon needs the Aqua session to be able to access the login keychain
+// (pull secret, SSO tokens), so it is preferred whenever a GUI session exists.
+// Background is only used for headless (e.g. SSH only) environments, since an
+// Aqua agent can't be loaded there (error 134, BOOTSTRAP_NOT_PRIVILEGED).
+func sessionType() string {
+	if guiSessionExists() {
+		return aquaSessionType
+	}
+	return backgroundSessionType
+}
+
+// domainForSessionType returns the launchd domain matching the session type:
+// 'gui/<uid>' for Aqua and 'user/<uid>' for Background
+func domainForSessionType(sessionType string) string {
+	if sessionType == aquaSessionType {
+		return fmt.Sprintf("gui/%d", goos.Getuid())
+	}
+	return fmt.Sprintf("user/%d", goos.Getuid())
+}
+
 func generatePlistContent(config AgentConfig) ([]byte, error) {
+	return generatePlistContentForSession(config, sessionType())
+}
+
+func generatePlistContentForSession(config AgentConfig, sessionType string) ([]byte, error) {
 	var plistContent bytes.Buffer
 	t, err := template.New("plist").Parse(plistTemplate)
 	if err != nil {
 		return nil, err
 	}
-	err = t.Execute(&plistContent, config)
+	err = t.Execute(&plistContent, plistTemplateData{AgentConfig: config, SessionType: sessionType})
 	if err != nil {
 		return nil, err
 	}
@@ -115,31 +161,39 @@ func CheckPlist(config AgentConfig) error {
 }
 
 // LoadPlist loads a launchd agents' plist file
+// The plist is bootstrapped in the domain matching the session type it was
+// generated for, otherwise launchd refuses to load it.
 func LoadPlist(label string) error {
-	uid := goos.Getuid()
+	domain := domainForSessionType(sessionType())
 	// This is required for migration from older versions
-	if err := runLaunchCtl("enable", fmt.Sprintf("user/%d/%s", uid, label)); err != nil {
+	if err := runLaunchCtl("enable", fmt.Sprintf("%s/%s", domain, label)); err != nil {
 		logging.Debugf("Failed to enable launchd service %s: %v", label, err)
 	}
-	return runLaunchCtl("bootstrap", fmt.Sprintf("user/%d", uid), getPlistPath(label))
+	logging.Debugf("Loading launchd agent %s in domain %s", label, domain)
+	return runLaunchCtl("bootstrap", domain, getPlistPath(label))
 }
 
 // UnloadPlist Unloads a launchd agent's service
 func UnloadPlist(label string) error {
-	target := fmt.Sprintf("user/%d/%s", goos.Getuid(), label)
-	if err := runLaunchCtl("bootout", target); err != nil {
-		// The agent may be registered in a different launchd domain than
-		// the one targeted above (e.g. 'gui/<uid>', from an older CRC
-		// version or macOS auto-loading the LaunchAgent plist at login).
-		// In that case bootout reports "No such process" here even though
-		// the service is still active in the other domain, so always fall
-		// back to 'launchctl remove', which drops a job by label
-		// regardless of domain and won't conflict with a subsequently
-		// bootstrapped plist.
-		logging.Debugf("failed to bootout launchd agent '%s': %v, falling back to 'remove'", label, err)
-		return Remove(label)
+	// The agent may be registered in either the 'gui/<uid>' or the
+	// 'user/<uid>' domain, depending on the session type it was loaded
+	// for (a GUI session may have appeared or disappeared since then, an
+	// older CRC version may have loaded it, or macOS may have auto-loaded
+	// the LaunchAgent plist at login), so try both.
+	for _, st := range []string{aquaSessionType, backgroundSessionType} {
+		target := fmt.Sprintf("%s/%s", domainForSessionType(st), label)
+		err := runLaunchCtl("bootout", target)
+		if err == nil {
+			return nil
+		}
+		logging.Debugf("failed to bootout launchd agent '%s': %v", target, err)
 	}
-	return nil
+	// bootout reports "No such process" when the service can't be found in
+	// the targeted domain, so always fall back to 'launchctl remove', which
+	// drops a job by label regardless of domain and won't conflict with a
+	// subsequently bootstrapped plist.
+	logging.Debugf("falling back to 'remove' for launchd agent '%s'", label)
+	return Remove(label)
 }
 
 // RemovePlist removes a launchd agent plist config file
