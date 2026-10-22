@@ -10,10 +10,15 @@ import (
 	"golang.org/x/tools/go/ssa"
 )
 
+const (
+	errMethod = "Err"
+	rowsName  = "Rows"
+)
+
 func NewAnalyzer(sqlPkgs ...string) *analysis.Analyzer {
 	return &analysis.Analyzer{
 		Name: "rowserrcheck",
-		Doc:  Doc,
+		Doc:  "Checks whether Rows.Err of rows is checked successfully.",
 		Run:  NewRun(sqlPkgs...),
 		Requires: []*analysis.Analyzer{
 			buildssa.Analyzer,
@@ -21,27 +26,19 @@ func NewAnalyzer(sqlPkgs ...string) *analysis.Analyzer {
 	}
 }
 
-const (
-	Doc       = "rowserrcheck checks whether Rows.Err is checked"
-	errMethod = "Err"
-	rowsName  = "Rows"
-)
-
 type runner struct {
-	pass          *analysis.Pass
 	rowsTyp       *types.Pointer
 	rowsInterface *types.Interface
 	rowsObj       types.Object
 	skipFile      map[*ast.File]bool
-	sqlPkgs       []string
 }
 
 func NewRun(pkgs ...string) func(pass *analysis.Pass) (any, error) {
+	sqlPkgs := slices.Concat(pkgs, []string{"database/sql"})
+
 	return func(pass *analysis.Pass) (any, error) {
-		sqlPkgs := slices.Concat(pkgs, []string{"database/sql"})
 		for _, pkg := range sqlPkgs {
 			r := new(runner)
-			r.sqlPkgs = sqlPkgs
 			r.run(pass, pkg)
 		}
 
@@ -52,7 +49,6 @@ func NewRun(pkgs ...string) func(pass *analysis.Pass) (any, error) {
 // run executes an analysis for the pass. The receiver is passed
 // by value because this func is called in parallel for different passes.
 func (r *runner) run(pass *analysis.Pass, pkgPath string) {
-	r.pass = pass
 	pssa := pass.ResultOf[buildssa.Analyzer].(*buildssa.SSA)
 	funcs := pssa.SrcFuncs
 
@@ -137,81 +133,7 @@ func (r *runner) errCallMissing(b *ssa.BasicBlock, i int) (ret bool) {
 			continue
 		}
 
-		var errCalled func(resRef ssa.Instruction) bool
-
-		errCalled = func(resRef ssa.Instruction) bool {
-			switch resRef := resRef.(type) {
-			case *ssa.Phi:
-				if resRef.Referrers() == nil {
-					return false
-				}
-
-				if slices.ContainsFunc(*resRef.Referrers(), errCalled) {
-					return true
-				}
-			case *ssa.Store: // Call in Closure function
-				if resRef.Addr.Referrers() == nil {
-					return false
-				}
-
-				for _, aref := range *resRef.Addr.Referrers() {
-					switch c := aref.(type) {
-					case *ssa.MakeClosure:
-						f := c.Fn.(*ssa.Function)
-
-						called := r.isClosureCalled(c)
-						if r.calledInFunc(f, called) {
-							return true
-						}
-					case *ssa.UnOp:
-						if c.Referrers() == nil {
-							continue
-						}
-
-						if slices.ContainsFunc(*c.Referrers(), errCalled) {
-							return true
-						}
-					}
-				}
-			case *ssa.Call: // Indirect function call
-				if r.isErrCall(resRef) {
-					return true
-				}
-
-				if f, ok := resRef.Call.Value.(*ssa.Function); ok {
-					for _, b := range f.Blocks {
-						for i := range b.Instrs {
-							if !r.errCallMissing(b, i) {
-								return true
-							}
-						}
-					}
-				}
-			case *ssa.FieldAddr:
-				if resRef.Referrers() == nil {
-					return false
-				}
-
-				for _, bRef := range *resRef.Referrers() {
-					bOp, ok := r.getBodyOp(bRef)
-					if !ok {
-						continue
-					}
-
-					if bOp.Referrers() == nil {
-						continue
-					}
-
-					if slices.ContainsFunc(*bOp.Referrers(), r.isErrCall) {
-						return true
-					}
-				}
-			}
-
-			return false
-		}
-
-		if slices.ContainsFunc(resRefs, errCalled) {
+		if slices.ContainsFunc(resRefs, r.isErrCalled) {
 			return false
 		}
 	}
@@ -229,6 +151,7 @@ func (r *runner) getCallReturnsRow(instr ssa.Instruction) (*ssa.Call, bool) {
 
 	for v := range res.Variables() {
 		typeToCheck := v.Type()
+
 		if types.Identical(typeToCheck, r.rowsTyp) {
 			return call, true
 		}
@@ -244,13 +167,18 @@ func (r *runner) getCallReturnsRow(instr ssa.Instruction) (*ssa.Call, bool) {
 func (r *runner) getRowsVal(instr ssa.Instruction) (ssa.Value, bool) {
 	switch instr := instr.(type) {
 	case *ssa.Call:
-		if len(instr.Call.Args) == 1 && types.Identical(instr.Call.Args[0].Type(), r.rowsTyp) {
+		if len(instr.Call.Args) != 1 {
+			return nil, false
+		}
+
+		if types.Identical(instr.Call.Args[0].Type(), r.rowsTyp) {
 			return instr.Call.Args[0], true
 		}
 
-		if len(instr.Call.Args) == 1 && r.rowsInterface != nil && types.Implements(instr.Call.Args[0].Type(), r.rowsInterface) {
+		if r.rowsInterface != nil && types.Implements(instr.Call.Args[0].Type(), r.rowsInterface) {
 			return instr.Call.Args[0], true
 		}
+
 	case ssa.Value:
 		if types.Identical(instr.Type(), r.rowsTyp) {
 			return instr, true
@@ -259,7 +187,6 @@ func (r *runner) getRowsVal(instr ssa.Instruction) (ssa.Value, bool) {
 		if r.rowsInterface != nil && types.Implements(instr.Type(), r.rowsInterface) {
 			return instr, true
 		}
-	default:
 	}
 
 	return nil, false
@@ -277,24 +204,113 @@ func (r *runner) getBodyOp(instr ssa.Instruction) (*ssa.UnOp, bool) {
 	return op, true
 }
 
-func (r *runner) isErrCall(ccall ssa.Instruction) bool {
-	switch ccall := ccall.(type) {
+func (r *runner) isErrCalled(inst ssa.Instruction) bool {
+	return r.isErrCalledVisited(inst, map[ssa.Instruction]bool{})
+}
+
+func (r *runner) isErrCalledVisited(inst ssa.Instruction, visited map[ssa.Instruction]bool) bool {
+	if visited[inst] {
+		return false
+	}
+
+	visited[inst] = true
+
+	isErrCalled := func(i ssa.Instruction) bool {
+		return r.isErrCalledVisited(i, visited)
+	}
+
+	switch resRef := inst.(type) {
+	case *ssa.Phi:
+		if resRef.Referrers() == nil {
+			return false
+		}
+
+		if slices.ContainsFunc(*resRef.Referrers(), isErrCalled) {
+			return true
+		}
+
+	case *ssa.Store: // Call in Closure function
+		if resRef.Addr.Referrers() == nil {
+			return false
+		}
+
+		for _, aref := range *resRef.Addr.Referrers() {
+			switch c := aref.(type) {
+			case *ssa.MakeClosure:
+				f := c.Fn.(*ssa.Function)
+
+				called := r.isClosureCalled(c)
+				if r.calledInFunc(f, called) {
+					return true
+				}
+			case *ssa.UnOp:
+				if c.Referrers() == nil {
+					continue
+				}
+
+				if slices.ContainsFunc(*c.Referrers(), isErrCalled) {
+					return true
+				}
+			}
+		}
+
+	case *ssa.Call: // Indirect function call
+		if r.isErrInstruction(resRef) {
+			return true
+		}
+
+		if f, ok := resRef.Call.Value.(*ssa.Function); ok {
+			for _, b := range f.Blocks {
+				for i := range b.Instrs {
+					if !r.errCallMissing(b, i) {
+						return true
+					}
+				}
+			}
+		}
+
+	case *ssa.FieldAddr:
+		if resRef.Referrers() == nil {
+			return false
+		}
+
+		for _, bRef := range *resRef.Referrers() {
+			bOp, ok := r.getBodyOp(bRef)
+			if !ok {
+				continue
+			}
+
+			if bOp.Referrers() == nil {
+				continue
+			}
+
+			if slices.ContainsFunc(*bOp.Referrers(), r.isErrInstruction) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func (r *runner) isErrInstruction(inst ssa.Instruction) bool {
+	switch ccall := inst.(type) {
 	case *ssa.Defer:
-		if ccall.Call.Value != nil && ccall.Call.Value.Name() == errMethod {
-			return true
-		}
-
-		if ccall.Call.Method != nil && ccall.Call.Method.Name() == errMethod {
-			return true
-		}
+		return r.isErrCall(ccall.Call)
 	case *ssa.Call:
-		if ccall.Call.Value != nil && ccall.Call.Value.Name() == errMethod {
-			return true
-		}
+		return r.isErrCall(ccall.Call)
+	default:
+		return false
+	}
+}
 
-		if ccall.Call.Method != nil && ccall.Call.Method.Name() == errMethod {
-			return true
-		}
+func (r *runner) isErrCall(call ssa.CallCommon) bool {
+	if call.Value != nil && call.Value.Name() == errMethod {
+		return true
+	}
+
+	if call.Method != nil && call.Method.Name() == errMethod {
+		return true
 	}
 
 	return false
@@ -325,17 +341,25 @@ func (r *runner) calledInFunc(f *ssa.Function, called bool) bool {
 				}
 
 				for _, ref := range *instr.Referrers() {
-					//nolint:nestif // need to be reviewed.
-					if v, ok := ref.(ssa.Value); ok {
-						if vCall, ok := v.(*ssa.Call); ok {
-							if vCall.Call.Value != nil && vCall.Call.Value.Name() == errMethod {
-								if called {
-									return true
-								}
-							}
-						}
+					v, ok := ref.(ssa.Value)
+					if !ok {
+						continue
+					}
+
+					vCall, ok := v.(*ssa.Call)
+					if !ok {
+						continue
+					}
+
+					if vCall.Call.Value == nil || vCall.Call.Value.Name() != errMethod {
+						continue
+					}
+
+					if called {
+						return true
 					}
 				}
+
 			default:
 				if r.errCallMissing(b, i) || !called {
 					return false

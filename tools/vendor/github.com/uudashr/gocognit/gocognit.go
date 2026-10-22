@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"go/types"
 	"strconv"
 
 	"golang.org/x/tools/go/analysis"
@@ -78,14 +79,35 @@ func ComplexityStats(f *ast.File, fset *token.FileSet, stats []Stat) []Stat {
 
 // ComplexityStatsWithDiagnostic builds the complexity statistics with diagnostic.
 func ComplexityStatsWithDiagnostic(f *ast.File, fset *token.FileSet, stats []Stat, enableDiagnostics bool) []Stat {
-	for _, decl := range f.Decls {
-		if fn, ok := decl.(*ast.FuncDecl); ok {
+	return ComplexityStatsForFilesWithDiagnostic([]*ast.File{f}, fset, nil, stats, enableDiagnostics)
+}
+
+// ComplexityStatsForFiles builds the complexity statistics for a package made
+// up of the given files. Recursion is detected across the whole set, so
+// indirect recursion is counted. When info is non-nil it is used to resolve
+// calls precisely; otherwise a syntactic approximation is used.
+func ComplexityStatsForFiles(files []*ast.File, fset *token.FileSet, info *types.Info, stats []Stat) []Stat {
+	return ComplexityStatsForFilesWithDiagnostic(files, fset, info, stats, false)
+}
+
+// ComplexityStatsForFilesWithDiagnostic builds the complexity statistics for a
+// package made up of the given files, optionally with diagnostic output.
+func ComplexityStatsForFilesWithDiagnostic(files []*ast.File, fset *token.FileSet, info *types.Info, stats []Stat, enableDiagnostics bool) []Stat {
+	recursive := RecursiveFuncs(files, info)
+
+	for _, f := range files {
+		for _, decl := range f.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok {
+				continue
+			}
+
 			d := parseDirective(fn.Doc)
 			if d.Ignore {
 				continue
 			}
 
-			res := ScanComplexity(fn, enableDiagnostics)
+			res := ScanComplexityWithRecursion(fn, recursive[fn], enableDiagnostics)
 
 			stats = append(stats, Stat{
 				PkgName:     f.Name.Name,
@@ -161,14 +183,50 @@ func Complexity(fn *ast.FuncDecl) int {
 	return res.Complexity
 }
 
-// ScanComplexity scans the function declaration.
+// ScanComplexity scans the function declaration. Recursion is detected for
+// direct self-calls only: a lone declaration carries no information about the
+// surrounding package, so indirect cycles cannot be seen. Prefer a
+// package-aware entry point such as [ComplexityStatsForFiles], or combine
+// [RecursiveFuncs] with [ScanComplexityWithRecursion].
 func ScanComplexity(fn *ast.FuncDecl, includeDiagnostics bool) ScanResult {
+	return scanComplexity(fn, scanOptions{
+		includeDiagnostics: includeDiagnostics,
+		recursive:          directRecursive(fn),
+	})
+}
+
+// ScanComplexityWithRecursion scans the function declaration with recursion
+// information from a package-level analysis (see [RecursiveFuncs]). When
+// recursive is true, exactly one fundamental increment is added for the
+// recursion cycle, regardless of how many recursive calls the function makes.
+func ScanComplexityWithRecursion(fn *ast.FuncDecl, recursive bool, includeDiagnostics bool) ScanResult {
+	return scanComplexity(fn, scanOptions{
+		includeDiagnostics: includeDiagnostics,
+		recursive:          recursive,
+	})
+}
+
+// scanOptions controls how scanComplexity accounts for recursion.
+type scanOptions struct {
+	includeDiagnostics bool
+
+	// recursive reports whether fn takes part in a recursion cycle. The
+	// increment is a property of the function, not of each call, so it is
+	// applied once after the walk.
+	recursive bool
+}
+
+func scanComplexity(fn *ast.FuncDecl, opts scanOptions) ScanResult {
 	v := complexityVisitor{
 		name:               fn.Name,
-		diagnosticsEnabled: includeDiagnostics,
+		diagnosticsEnabled: opts.includeDiagnostics,
 	}
 
 	ast.Walk(&v, fn)
+
+	if opts.recursive {
+		v.incComplexity("recursion", fn.Pos())
+	}
 
 	return ScanResult{
 		Diagnostics: v.diagnostics,
@@ -289,8 +347,6 @@ func (v *complexityVisitor) Visit(n ast.Node) ast.Visitor {
 		return v.visitBranchStmt(n)
 	case *ast.BinaryExpr:
 		return v.visitBinaryExpr(n)
-	case *ast.CallExpr:
-		return v.visitCallExpr(n)
 	}
 
 	return v
@@ -312,7 +368,9 @@ func (v *complexityVisitor) visitIfStmt(n *ast.IfStmt) ast.Visitor {
 	if _, ok := n.Else.(*ast.BlockStmt); ok {
 		v.incComplexity("else", n.Else.Pos())
 
+		v.incNesting()
 		ast.Walk(v, n.Else)
+		v.decNesting()
 	} else if _, ok := n.Else.(*ast.IfStmt); ok {
 		v.markAsElseNode(n.Else)
 		ast.Walk(v, n.Else)
@@ -443,20 +501,12 @@ func (v *complexityVisitor) visitBinaryExpr(n *ast.BinaryExpr) ast.Visitor {
 	return v
 }
 
-func (v *complexityVisitor) visitCallExpr(n *ast.CallExpr) ast.Visitor {
-	if callIdent, ok := n.Fun.(*ast.Ident); ok {
-		obj, name := callIdent.Obj, callIdent.Name
-		if obj == v.name.Obj && name == v.name.Name {
-			// called by same function directly (direct recursion)
-			v.incComplexity(name, n.Pos())
-		}
-	}
-
-	return v
-}
-
 func (v *complexityVisitor) collectBinaryOps(exp ast.Expr) []token.Token {
 	v.markCalculated(exp)
+
+	if paren, ok := exp.(*ast.ParenExpr); ok {
+		return v.collectBinaryOps(paren.X)
+	}
 
 	if exp, ok := exp.(*ast.BinaryExpr); ok {
 		return mergeBinaryOps(v.collectBinaryOps(exp.X), exp.Op, v.collectBinaryOps(exp.Y))
@@ -513,6 +563,8 @@ func init() {
 func run(pass *analysis.Pass) (interface{}, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
+	recursive := RecursiveFuncs(pass.Files, pass.TypesInfo)
+
 	nodeFilter := []ast.Node{
 		(*ast.FuncDecl)(nil),
 	}
@@ -526,7 +578,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 		fnName := funcName(funcDecl)
 
-		fnComplexity := Complexity(funcDecl)
+		fnComplexity := ScanComplexityWithRecursion(funcDecl, recursive[funcDecl], false).Complexity
 
 		if fnComplexity > over {
 			pass.Reportf(funcDecl.Pos(), "cognitive complexity %d of func %s is high (> %d)", fnComplexity, fnName, over)

@@ -9,6 +9,15 @@ A linter checks the odd number of key and value pairs for common logger librarie
 - [log/slog](https://pkg.go.dev/log/slog)
 - [zap](https://github.com/uber-go/zap)
 
+For klog and logr, it also reports pointer values whose element type implements
+`fmt.Stringer` (for example `*metav1.Time`, which embeds `time.Time`). When such a
+pointer is nil, klog and logr's funcr render it as
+`<panic: runtime error: invalid memory address or nil pointer dereference>`.
+Wrap the value with `klog.SafePtr`, check it for nil first, or call `.String()`
+when it cannot be nil. Values that are provably non-nil at the call site, such as
+`&T{}` or a pointer used after a `!= nil` check or a nil guard that returns or
+exits, are not reported.
+
 It's recommended to use loggercheck with [golangci-lint](https://golangci-lint.run/usage/linters/#loggercheck).
 
 ## Badges

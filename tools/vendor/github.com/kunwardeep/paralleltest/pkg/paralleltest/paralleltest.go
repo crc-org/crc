@@ -84,7 +84,7 @@ func (a *parallelAnalyzer) analyzeTestRun(pass *analysis.Pass, n ast.Node, testV
 						analysis.hasParallel = methodParallelIsCalledInTestFunction(p, innerTestVar)
 					}
 					if !analysis.cantParallel {
-						analysis.cantParallel = methodSetenvIsCalledInTestFunction(p, innerTestVar)
+						analysis.cantParallel = parallelBlockingMethodIsCalledInTestFunction(p, innerTestVar)
 					}
 					return true
 				})
@@ -147,7 +147,7 @@ func (a *parallelAnalyzer) analyzeTestFunction(pass *analysis.Pass, funcDecl *as
 					analysis.funcHasParallelMethod = methodParallelIsCalledInTestFunction(n, testVar)
 				}
 				if !analysis.funcCantParallelMethod {
-					analysis.funcCantParallelMethod = methodSetenvIsCalledInTestFunction(n, testVar)
+					analysis.funcCantParallelMethod = parallelBlockingMethodIsCalledInTestFunction(n, testVar)
 				}
 				runAnalysis := a.analyzeTestRun(pass, n, testVar)
 				analysis.numberOfTestRun += runAnalysis.numberOfTestRun
@@ -175,7 +175,7 @@ func (a *parallelAnalyzer) analyzeTestFunction(pass *analysis.Pass, funcDecl *as
 							analysis.rangeStatementHasParallelMethod = methodParallelIsCalledInMethodRun(r.X, innerTestVar)
 						}
 						if !analysis.rangeStatementCantParallelMethod {
-							analysis.rangeStatementCantParallelMethod = methodSetenvIsCalledInMethodRun(r.X, innerTestVar)
+							analysis.rangeStatementCantParallelMethod = parallelBlockingMethodIsCalledInMethodRun(r.X, innerTestVar)
 						}
 						if !a.ignoreLoopVar && analysis.loopVariableUsedInRun == nil {
 							if run, ok := r.X.(*ast.CallExpr); ok {
@@ -334,8 +334,9 @@ func methodParallelIsCalledInMethodRun(node ast.Node, testVar string) bool {
 	return targetMethodIsCalledInMethodRun(node, testVar, "Parallel")
 }
 
-func methodSetenvIsCalledInMethodRun(node ast.Node, testVar string) bool {
-	return targetMethodIsCalledInMethodRun(node, testVar, "Setenv")
+func parallelBlockingMethodIsCalledInMethodRun(node ast.Node, testVar string) bool {
+	return targetMethodIsCalledInMethodRun(node, testVar, "Setenv") ||
+		targetMethodIsCalledInMethodRun(node, testVar, "Chdir")
 }
 
 func targetMethodIsCalledInMethodRun(node ast.Node, testVar, targetMethod string) bool {
@@ -370,8 +371,9 @@ func methodRunIsCalledInTestFunction(node ast.Node, testVar string) bool {
 	return exprCallHasMethod(node, testVar, "Run")
 }
 
-func methodSetenvIsCalledInTestFunction(node ast.Node, testVar string) bool {
-	return exprCallHasMethod(node, testVar, "Setenv")
+func parallelBlockingMethodIsCalledInTestFunction(node ast.Node, testVar string) bool {
+	return exprCallHasMethod(node, testVar, "Setenv") ||
+		exprCallHasMethod(node, testVar, "Chdir")
 }
 
 func exprCallHasMethod(node ast.Node, receiverName, methodName string) bool {

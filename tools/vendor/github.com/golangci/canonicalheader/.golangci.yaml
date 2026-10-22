@@ -1,19 +1,5 @@
 version: "2"
 
-run:
-  build-tags:
-    - integration
-  modules-download-mode: readonly
-
-output:
-  formats:
-    text:
-      path: stdout
-      print-linter-name: true
-      print-issued-lines: false
-      colors: false
-
-
 linters:
   enable:
     - asasalint
@@ -404,7 +390,6 @@ linters:
     presets:
       - comments
       - common-false-positives
-      - legacy
       - std-error-handling
 
 issues:

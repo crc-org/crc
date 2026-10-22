@@ -1,10 +1,13 @@
 ---
+version: 2
+
 project_name: loggercheck
 
 release:
   github:
     owner: timonwong
     name: loggercheck
+  mode: keep-existing
 
 builds:
   - binary: loggercheck
@@ -24,6 +27,9 @@ builds:
     ignore:
       - goos: darwin
         goarch: '386'
+      # windows/arm was removed from the Go toolchain.
+      - goos: windows
+        goarch: arm
     main: ./cmd/loggercheck/
     flags:
       - -trimpath
@@ -33,27 +39,16 @@ archives:
   - name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
     files:
       - LICENSE
       - README.md
 
 snapshot:
-  name_template: '{{ incpatch .Version }}-next'
+  version_template: '{{ incpatch .Version }}-next'
 
 checksum:
   name_template: 'checksums.txt'
 
 changelog:
-  sort: asc
-  filters:
-    exclude:
-      - '(?i)^docs?:'
-      - '(?i)^docs\([^:]+\):'
-      - '(?i)^docs\[[^:]+\]:'
-      - '^tests?:'
-      - '(?i)^dev:'
-      - '^build\(deps\): bump .* in /docs \(#\d+\)'
-      - '^build\(deps\): bump .* in /\.github/peril \(#\d+\)'
-      - Merge pull request
-      - Merge branch
+  disable: true

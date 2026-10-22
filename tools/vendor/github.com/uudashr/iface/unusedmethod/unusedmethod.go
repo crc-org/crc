@@ -22,7 +22,7 @@ func newAnalyzer() *analysis.Analyzer {
 
 	analyzer := &analysis.Analyzer{
 		Name:     "unusedmethod",
-		Doc:      "Detects interface methods that are never used anywhere in the same package where they are defined. A method is considered used only when invoked or referenced through a value of the interface type; merely implementing the interface does not count as a use.",
+		Doc:      "Detects interface methods that are never used anywhere in the same package where they are defined. A method is considered used only when invoked or referenced through a value of the interface type; merely implementing the interface does not count as a use. Exported methods are reported without a suggested fix, since they may be used by other packages.",
 		URL:      "https://pkg.go.dev/github.com/uudashr/iface/unusedmethod",
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 		Run:      r.run,
@@ -124,7 +124,7 @@ func (r *runner) run(pass *analysis.Pass) (any, error) {
 					}
 
 					if fn, ok := obj.(*types.Func); ok {
-						unusedMethods[fn] = methodEntry{
+						unusedMethods[fn.Origin()] = methodEntry{
 							ifaceName: ts.Name.Name,
 							field:     field,
 						}
@@ -166,7 +166,7 @@ func (r *runner) run(pass *analysis.Pass) (any, error) {
 			return
 		}
 
-		delete(unusedMethods, fn)
+		delete(unusedMethods, fn.Origin())
 	})
 
 	if r.debug {
@@ -180,37 +180,46 @@ func (r *runner) run(pass *analysis.Pass) (any, error) {
 
 		msg := fmt.Sprintf("method '%s()' is declared on interface '%s' but not used within the package", fn.Name(), entry.ifaceName)
 
-		field := entry.field
-
-		pos := field.Pos()
-		if doc := field.Doc; doc != nil {
-			pos = doc.Pos()
-		}
-
-		end := field.End()
-		if comment := field.Comment; comment != nil {
-			end = comment.End()
-		}
-
-		pass.Report(analysis.Diagnostic{
-			Pos:     field.Pos(),
+		diag := analysis.Diagnostic{
+			Pos:     entry.field.Pos(),
 			Message: msg,
-			SuggestedFixes: []analysis.SuggestedFix{
-				{
-					Message: "Remove the unused method",
-					TextEdits: []analysis.TextEdit{
-						{
-							Pos:     pos,
-							End:     end,
-							NewText: []byte{},
-						},
-					},
-				},
-			},
-		})
+		}
+
+		if fix := removalFix(entry.field); fix != nil {
+			diag.SuggestedFixes = []analysis.SuggestedFix{*fix}
+		}
+
+		pass.Report(diag)
 	}
 
 	return nil, nil
+}
+
+func removalFix(field *ast.Field) *analysis.SuggestedFix {
+	if field.Names[0].IsExported() {
+		return nil
+	}
+
+	pos := field.Pos()
+	if doc := field.Doc; doc != nil {
+		pos = doc.Pos()
+	}
+
+	end := field.End()
+	if comment := field.Comment; comment != nil {
+		end = comment.End()
+	}
+
+	return &analysis.SuggestedFix{
+		Message: "Remove the unused method",
+		TextEdits: []analysis.TextEdit{
+			{
+				Pos:     pos,
+				End:     end,
+				NewText: []byte{},
+			},
+		},
+	}
 }
 
 func (r *runner) debugln(a ...any) {

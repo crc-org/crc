@@ -23,7 +23,7 @@ func newAnalyzer() *analysis.Analyzer {
 
 	analyzer := &analysis.Analyzer{
 		Name:     "unused",
-		Doc:      "Detects interfaces which are not used anywhere in the same package where they are defined.",
+		Doc:      "Detects interfaces which are not used anywhere in the same package where they are defined. Exported interfaces are reported without a suggested fix, since they may be used by other packages.",
 		URL:      "https://pkg.go.dev/github.com/uudashr/iface/unused",
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 		Run:      r.run,
@@ -167,43 +167,50 @@ func (r *runner) run(pass *analysis.Pass) (any, error) {
 		ts := entry.ts
 		decl := entry.decl
 
-		var start, end token.Pos
-		if len(decl.Specs) == 1 {
-			start = decl.Pos()
-			if decl.Doc != nil {
-				start = decl.Doc.Pos()
-			}
-
-			end = decl.End()
-		} else {
-			start = ts.Pos()
-			if ts.Doc != nil {
-				start = ts.Doc.Pos()
-			}
-
-			end = ts.End()
-		}
-
 		msg := fmt.Sprintf("interface '%s' is declared but not used within the package", typeName.Name())
-		pass.Report(analysis.Diagnostic{
+
+		diag := analysis.Diagnostic{
 			Pos:     ts.Pos(),
 			Message: msg,
-			SuggestedFixes: []analysis.SuggestedFix{
-				{
-					Message: "Remove the unused interface declaration",
-					TextEdits: []analysis.TextEdit{
-						{
-							Pos:     start,
-							End:     end,
-							NewText: []byte{},
-						},
-					},
-				},
-			},
-		})
+		}
+
+		if fix := removalFix(decl, ts, typeName); fix != nil {
+			diag.SuggestedFixes = []analysis.SuggestedFix{*fix}
+		}
+
+		pass.Report(diag)
 	}
 
 	return nil, nil
+}
+
+func removalFix(decl *ast.GenDecl, ts *ast.TypeSpec, typeName *types.TypeName) *analysis.SuggestedFix {
+	if typeName.Exported() {
+		return nil
+	}
+
+	start, end := decl.Pos(), decl.End()
+	doc := decl.Doc
+
+	if len(decl.Specs) > 1 {
+		start, end = ts.Pos(), ts.End()
+		doc = ts.Doc
+	}
+
+	if doc != nil {
+		start = doc.Pos()
+	}
+
+	return &analysis.SuggestedFix{
+		Message: "Remove the unused interface declaration",
+		TextEdits: []analysis.TextEdit{
+			{
+				Pos:     start,
+				End:     end,
+				NewText: []byte{},
+			},
+		},
+	}
 }
 
 func (r *runner) debugln(a ...any) {
