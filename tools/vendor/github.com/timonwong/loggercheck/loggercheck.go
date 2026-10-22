@@ -15,6 +15,7 @@ import (
 	"golang.org/x/tools/go/types/typeutil"
 
 	"github.com/timonwong/loggercheck/internal/checkers"
+	"github.com/timonwong/loggercheck/internal/nilness"
 	"github.com/timonwong/loggercheck/internal/rules"
 	"github.com/timonwong/loggercheck/internal/sets"
 )
@@ -81,10 +82,10 @@ func vendorLessPath(ipath string) string {
 	return ipath
 }
 
-func (l *loggercheck) getCheckerForFunc(fn *types.Func) checkers.Checker {
+func (l *loggercheck) getCheckerForFunc(fn *types.Func) (checker checkers.Checker, rulesetName string) {
 	pkg := fn.Pkg()
 	if pkg == nil {
-		return nil
+		return nil, ""
 	}
 
 	pkgPath := vendorLessPath(pkg.Path())
@@ -104,17 +105,17 @@ func (l *loggercheck) getCheckerForFunc(fn *types.Func) checkers.Checker {
 			continue
 		}
 
-		checker := checkerByRulesetName[rs.Name]
+		checker = checkerByRulesetName[rs.Name]
 		if checker == nil {
-			return checkers.General{}
+			return checkers.General{}, rs.Name
 		}
-		return checker
+		return checker, rs.Name
 	}
 
-	return nil
+	return nil, ""
 }
 
-func (l *loggercheck) checkLoggerArguments(pass *analysis.Pass, call *ast.CallExpr) {
+func (l *loggercheck) checkLoggerArguments(pass *analysis.Pass, call *ast.CallExpr, nl *nilness.Index) {
 	fn, _ := typeutil.Callee(pass.TypesInfo, call).(*types.Func)
 	if fn == nil {
 		return // function pointer is not supported
@@ -130,7 +131,7 @@ func (l *loggercheck) checkLoggerArguments(pass *analysis.Pass, call *ast.CallEx
 		return
 	}
 
-	checker := l.getCheckerForFunc(fn)
+	checker, rulesetName := l.getCheckerForFunc(fn)
 	if checker == nil {
 		return
 	}
@@ -139,9 +140,11 @@ func (l *loggercheck) checkLoggerArguments(pass *analysis.Pass, call *ast.CallEx
 		Expr:      call,
 		Func:      fn,
 		Signature: sig,
+		Nilness:   nl,
 	}, checkers.Config{
 		RequireStringKey: l.requireStringKey,
 		NoPrintfLike:     l.noPrintfLike,
+		NilStringer:      nilStringerRulesetNames.Has(rulesetName),
 	})
 }
 
@@ -186,6 +189,7 @@ func (l *loggercheck) run(pass *analysis.Pass) (interface{}, error) {
 	}
 
 	insp := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+	nl := nilness.NewLazyIndex(pass)
 	nodeFilter := []ast.Node{
 		(*ast.CallExpr)(nil),
 	}
@@ -198,7 +202,7 @@ func (l *loggercheck) run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		l.checkLoggerArguments(pass, call)
+		l.checkLoggerArguments(pass, call, nl)
 	})
 
 	return nil, nil

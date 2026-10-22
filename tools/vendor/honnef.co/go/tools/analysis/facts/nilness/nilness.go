@@ -39,7 +39,7 @@ func (fact *nilnessFact) String() string {
 }
 
 type ValueNilness struct {
-	// Undefined for non-interface values.
+	// Undefined for non-interface values and dynamically nil interface values.
 	// For interface values, whether the stored value may be nil.
 	// Even when Outer == MaybeNil, Inner may still offer precise information
 	// for the cases when Outer is dynamically not nil. For example, {NeverNil,
@@ -109,6 +109,10 @@ func run(pass *analysis.Pass) (any, error) {
 
 type Nilness uint8
 
+func (n Nilness) IsGlobal() bool {
+	return n == AlwaysNilGlobal || n == MaybeNilGlobal
+}
+
 const (
 	// The value is never nil.
 	NeverNil Nilness = iota + 1
@@ -119,6 +123,8 @@ const (
 	MaybeNilGlobal
 	// The value might be nil.
 	MaybeNil
+	// The value is always nil and loaded from a global
+	AlwaysNilGlobal
 )
 
 func (n Nilness) String() string {
@@ -129,6 +135,8 @@ func (n Nilness) String() string {
 		return "NeverNil"
 	case AlwaysNil:
 		return "AlwaysNil"
+	case AlwaysNilGlobal:
+		return "AlwaysNilGlobal"
 	case MaybeNilGlobal:
 		return "MaybeNilGlobal"
 	case MaybeNil:
@@ -332,6 +340,8 @@ start:
 						s.setOuter(v, an)
 					case AlwaysNil:
 						s.setOuter(v, MaybeNil)
+					case AlwaysNilGlobal:
+						s.setOuter(v, MaybeNilGlobal)
 					}
 				case "UnsafeSlice":
 					// If len is negative, or if ptr is nil and len is not
@@ -463,7 +473,7 @@ start:
 					if !ok {
 						return false
 					}
-					return k.Value == nil
+					return k.IsNil()
 				}
 				var target ir.Value
 				if isNil(binop.X) {
@@ -487,7 +497,11 @@ start:
 				}
 				switch op {
 				case token.EQL:
-					s.set(target, ValueNilness{AlwaysNil, AlwaysNil})
+					if s.get(target).Outer.IsGlobal() {
+						s.setOuter(target, AlwaysNilGlobal)
+					} else {
+						s.setOuter(target, AlwaysNil)
+					}
 				case token.NEQ:
 					s.setOuter(target, NeverNil)
 				default:
@@ -502,9 +516,9 @@ start:
 				s.set(v, s.get(v.X))
 			case *ir.Load:
 				if _, ok := v.X.(*ir.Global); ok {
-					s.setOuter(v, MaybeNilGlobal)
+					s.set(v, ValueNilness{MaybeNilGlobal, MaybeNilGlobal})
 				} else {
-					s.setOuter(v, MaybeNil)
+					s.set(v, ValueNilness{MaybeNil, MaybeNil})
 				}
 				s.setOuter(v.X, NeverNil)
 			case *ir.FieldAddr:
@@ -576,6 +590,8 @@ start:
 			case *ir.MapLookup:
 				if s.get(v.X).Outer == AlwaysNil {
 					s.set(v, ValueNilness{AlwaysNil, AlwaysNil})
+				} else if s.get(v.X).Outer == AlwaysNilGlobal {
+					s.set(v, ValueNilness{AlwaysNilGlobal, AlwaysNilGlobal})
 				} else {
 					s.set(v, ValueNilness{MaybeNil, MaybeNil})
 				}
@@ -707,9 +723,14 @@ start:
 		for _, instr := range b.Instrs {
 			ops = instr.Operands(ops[:0])
 			for _, pop := range ops {
-				if op, ok := (*pop).(*ir.Const); ok && typeutil.MaybePointerLike(op.Type()) {
-					// The only constant pointer-like is nil.
-					entrys.set(op, ValueNilness{Inner: AlwaysNil, Outer: AlwaysNil})
+				if op, ok := (*pop).(*ir.Const); ok {
+					if op.IsNil() {
+						entrys.set(op, ValueNilness{Inner: AlwaysNil, Outer: AlwaysNil})
+					} else if typeutil.MaybePointerLike(op.Type()) {
+						entrys.set(op, ValueNilness{Inner: MaybeNil, Outer: MaybeNil})
+					} else {
+						entrys.set(op, ValueNilness{Inner: NeverNil, Outer: NeverNil})
+					}
 				}
 			}
 		}
@@ -772,49 +793,82 @@ func (l lattice) Ident() ValueNilness {
 	return ValueNilness{}
 }
 
-var latticeMerge = [5][5]Nilness{
+var latticeMerge = [6][6]Nilness{
 	0: {
-		0:              0,
-		NeverNil:       NeverNil,
-		AlwaysNil:      AlwaysNil,
-		MaybeNilGlobal: MaybeNilGlobal,
-		MaybeNil:       MaybeNil,
+		0:               0,
+		NeverNil:        NeverNil,
+		AlwaysNil:       AlwaysNil,
+		AlwaysNilGlobal: AlwaysNilGlobal,
+		MaybeNilGlobal:  MaybeNilGlobal,
+		MaybeNil:        MaybeNil,
 	},
 	NeverNil: {
-		0:              NeverNil,
-		NeverNil:       NeverNil,
-		AlwaysNil:      MaybeNil,
-		MaybeNilGlobal: MaybeNilGlobal,
-		MaybeNil:       MaybeNil,
+		0:               NeverNil,
+		NeverNil:        NeverNil,
+		AlwaysNil:       MaybeNil,
+		AlwaysNilGlobal: MaybeNilGlobal,
+		MaybeNilGlobal:  MaybeNilGlobal,
+		MaybeNil:        MaybeNil,
 	},
 	AlwaysNil: {
-		0:              AlwaysNil,
-		NeverNil:       MaybeNil,
-		AlwaysNil:      AlwaysNil,
-		MaybeNilGlobal: MaybeNil,
-		MaybeNil:       MaybeNil,
+		0:               AlwaysNil,
+		NeverNil:        MaybeNil,
+		AlwaysNil:       AlwaysNil,
+		AlwaysNilGlobal: AlwaysNil,
+		MaybeNilGlobal:  MaybeNil,
+		MaybeNil:        MaybeNil,
+	},
+	AlwaysNilGlobal: {
+		0:               AlwaysNilGlobal,
+		NeverNil:        MaybeNilGlobal,
+		AlwaysNil:       AlwaysNil,
+		AlwaysNilGlobal: AlwaysNilGlobal,
+		MaybeNilGlobal:  MaybeNilGlobal,
+		MaybeNil:        MaybeNil,
 	},
 	MaybeNilGlobal: {
-		0:              MaybeNilGlobal,
-		NeverNil:       MaybeNilGlobal,
-		AlwaysNil:      MaybeNil,
-		MaybeNilGlobal: MaybeNilGlobal,
-		MaybeNil:       MaybeNil,
+		0:               MaybeNilGlobal,
+		NeverNil:        MaybeNilGlobal,
+		AlwaysNil:       MaybeNil,
+		AlwaysNilGlobal: MaybeNilGlobal,
+		MaybeNilGlobal:  MaybeNilGlobal,
+		MaybeNil:        MaybeNil,
 	},
 	MaybeNil: {
-		0:              MaybeNil,
-		NeverNil:       MaybeNil,
-		AlwaysNil:      MaybeNil,
-		MaybeNilGlobal: MaybeNil,
-		MaybeNil:       MaybeNil,
+		0:               MaybeNil,
+		NeverNil:        MaybeNil,
+		AlwaysNil:       MaybeNil,
+		AlwaysNilGlobal: MaybeNil,
+		MaybeNilGlobal:  MaybeNil,
+		MaybeNil:        MaybeNil,
 	},
 }
 
 // Merge implements [dfa.Semilattice].
 func (l lattice) Merge(a, b ValueNilness) ValueNilness {
+	o := latticeMerge[a.Outer][b.Outer]
+	i := latticeMerge[a.Inner][b.Inner]
+
+	// When an interface value is always nil, then there is no stored value and
+	// Inner is technically undefined, regardless of what concrete nilness
+	// value was assigned to it.
+	//
+	// For example, {AlwaysNil, AlwaysNil} ∨ {NeverNil, NeverNil} should
+	// produce {NeverNil, MaybeNil} instead of {MaybeNil, MaybeNil}, to denote
+	// that when the interface value isn't nil, the stored value is never nil.
+	//
+	// {AlwaysNilGlobal, _} v {AlwaysNil, _}, however, should result in
+	// {AlwaysNil, _}, regardless of the outer value.
+	if i != AlwaysNil && i != AlwaysNilGlobal {
+		if a.Outer == AlwaysNil || a.Outer == AlwaysNilGlobal {
+			i = b.Inner
+		} else if b.Outer == AlwaysNil || b.Outer == AlwaysNilGlobal {
+			i = a.Inner
+		}
+	}
 	return ValueNilness{
-		Inner: latticeMerge[a.Inner][b.Inner],
-		Outer: latticeMerge[a.Outer][b.Outer],
+		Inner: i,
+		Outer: o,
 	}
 }
 

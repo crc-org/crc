@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	pkgPath = "net/http"
-	name    = "Header"
+	httpHeaderPkg  = "net/http"
+	httpHeaderName = "Header"
 )
 
 //nolint:gochecknoglobals // for backward compatibility.
@@ -69,21 +69,6 @@ func (c *canonicalHeader) buildExclusions() map[string]string {
 }
 
 func (c *canonicalHeader) run(pass *analysis.Pass) (any, error) {
-	var headerObject types.Object
-	for _, object := range pass.TypesInfo.Uses {
-		if object.Pkg() != nil &&
-			object.Pkg().Path() == pkgPath &&
-			object.Name() == name {
-			headerObject = object
-			break
-		}
-	}
-
-	if headerObject == nil {
-		//nolint:nilnil // nothing to do here, because http.Header{} not usage.
-		return nil, nil
-	}
-
 	spctor, ok := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	if !ok {
 		return nil, fmt.Errorf("want %T, got %T", spctor, pass.ResultOf[inspect.Analyzer])
@@ -94,13 +79,8 @@ func (c *canonicalHeader) run(pass *analysis.Pass) (any, error) {
 	nodeFilter := []ast.Node{
 		(*ast.CallExpr)(nil),
 	}
-	var outerErr error
 
 	spctor.Preorder(nodeFilter, func(n ast.Node) {
-		if outerErr != nil {
-			return
-		}
-
 		callExp, ok := n.(*ast.CallExpr)
 		if !ok {
 			return
@@ -199,7 +179,7 @@ func (c *canonicalHeader) run(pass *analysis.Pass) (any, error) {
 		}
 
 		// It is not net/http.Header{}.
-		if !types.Identical(gotType, headerObject.Type()) {
+		if !isHTTPHeader(gotType) {
 			return
 		}
 
@@ -285,7 +265,8 @@ func (c *canonicalHeader) run(pass *analysis.Pass) (any, error) {
 		pass.Report(arg.diagnostic(headerKeyCanonical))
 	})
 
-	return nil, outerErr
+	//nolint:nilnil // This is expected by the signature of the callback.
+	return nil, nil
 }
 
 func canonicalHeaderKey(s string, m map[string]string) string {
@@ -306,4 +287,23 @@ func isValidMethod(name string) bool {
 	default:
 		return false
 	}
+}
+
+func isHTTPHeader(t types.Type) bool {
+	named, ok := types.Unalias(t).(*types.Named)
+	if !ok {
+		return false
+	}
+
+	obj := named.Obj()
+	if obj == nil {
+		return false
+	}
+
+	pkg := obj.Pkg()
+	if pkg == nil {
+		return false
+	}
+
+	return pkg.Path() == httpHeaderPkg && obj.Name() == httpHeaderName
 }

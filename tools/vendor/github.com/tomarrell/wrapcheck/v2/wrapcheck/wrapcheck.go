@@ -12,6 +12,8 @@ import (
 	"golang.org/x/tools/go/analysis"
 )
 
+var errorType = types.Universe.Lookup("error").Type()
+
 var DefaultIgnoreSigs = []string{
 	".Errorf(",
 	"errors.New(",
@@ -111,7 +113,7 @@ func run(cfg WrapcheckConfig) func(*analysis.Pass) (interface{}, error) {
 	var (
 		ignoreSigRegexp        []*regexp.Regexp
 		ignoreInterfaceRegexps []*regexp.Regexp
-		ignorePackageGlobs     []glob.Glob
+		ignorePackageGlobs     []globMatcher
 		err                    error
 	)
 
@@ -153,7 +155,7 @@ func run(cfg WrapcheckConfig) func(*analysis.Pass) (interface{}, error) {
 				}
 
 				// Iterate over the values to be returned looking for errors
-				for _, expr := range ret.Results {
+				for idx, expr := range ret.Results {
 					// Check if the return expression is a function call, if it is, we need
 					// to handle it by checking the return params of the function.
 					retFn, ok := expr.(*ast.CallExpr)
@@ -173,7 +175,8 @@ func run(cfg WrapcheckConfig) func(*analysis.Pass) (interface{}, error) {
 						// match an error within multiple return values, for that, the below
 						// tuple check is required.
 
-						if isError(pass.TypesInfo.TypeOf(expr)) {
+						if isError(pass.TypesInfo.TypeOf(expr)) &&
+							isWrappableResult(pass, parents, idx) {
 							reportUnwrapped(pass, retFn, retFn.Pos(), cfg, ignoreSigRegexp, ignoreInterfaceRegexps, ignorePackageGlobs)
 							return true
 						}
@@ -191,14 +194,15 @@ func run(cfg WrapcheckConfig) func(*analysis.Pass) (interface{}, error) {
 							if v == nil {
 								return true
 							}
-							if isError(v.Type()) {
+							if isError(v.Type()) && isWrappableResult(pass, parents, i) {
 								reportUnwrapped(pass, retFn, expr.Pos(), cfg, ignoreSigRegexp, ignoreInterfaceRegexps, ignorePackageGlobs)
 								return true
 							}
 						}
 					}
 
-					if !isError(pass.TypesInfo.TypeOf(expr)) {
+					if !isError(pass.TypesInfo.TypeOf(expr)) ||
+						!isWrappableResult(pass, parents, idx) {
 						continue
 					}
 
@@ -274,7 +278,7 @@ func reportUnwrapped(
 	cfg WrapcheckConfig,
 	regexpsSig []*regexp.Regexp,
 	regexpsInter []*regexp.Regexp,
-	pkgGlobs []glob.Glob,
+	pkgGlobs []globMatcher,
 ) {
 
 	if cfg.ReportInternalErrors {
@@ -347,7 +351,7 @@ func isInterface(pass *analysis.Pass, sel *ast.SelectorExpr) bool {
 // isFromotherPkg returns whether the function is defined in the package
 // currently under analysis or is considered external. It will ignore packages
 // defined in config.IgnorePackageGlobs.
-func isFromOtherPkg(pass *analysis.Pass, sel *ast.SelectorExpr, pkgGlobs []glob.Glob) bool {
+func isFromOtherPkg(pass *analysis.Pass, sel *ast.SelectorExpr, pkgGlobs []globMatcher) bool {
 	// The package of the function that we are calling which returns the error
 	fn := pass.TypesInfo.ObjectOf(sel.Sel)
 	if containsMatchGlob(pkgGlobs, fn.Pkg().Path()) {
@@ -436,7 +440,7 @@ func containsMatch(regexps []*regexp.Regexp, el string) bool {
 	return false
 }
 
-func containsMatchGlob(globs []glob.Glob, el string) bool {
+func containsMatchGlob(globs []globMatcher, el string) bool {
 	for _, g := range globs {
 		if g.Match(el) {
 			return true
@@ -446,13 +450,41 @@ func containsMatchGlob(globs []glob.Glob, el string) bool {
 	return false
 }
 
-// isError returns whether or not the provided type interface is an error
+// isError returns whether or not the provided type implements the error
+// interface
 func isError(typ types.Type) bool {
 	if typ == nil {
 		return false
 	}
 
-	return typ.String() == "error"
+	return types.Implements(typ, errorType.Underlying().(*types.Interface))
+}
+
+// isWrappableResult returns whether the result at index idx of the innermost
+// function enclosing the return statement can hold a wrapped error. Wrapping
+// produces an error, so the result type must be one that error is assignable
+// to.
+func isWrappableResult(pass *analysis.Pass, parents []ast.Node, idx int) bool {
+	for i := len(parents) - 1; i >= 0; i-- {
+		var typ types.Type
+		switch fn := parents[i].(type) {
+		case *ast.FuncLit:
+			typ = pass.TypesInfo.TypeOf(fn)
+		case *ast.FuncDecl:
+			typ = pass.TypesInfo.TypeOf(fn.Name)
+		default:
+			continue
+		}
+
+		sig, ok := typ.(*types.Signature)
+		if !ok || idx >= sig.Results().Len() {
+			return false
+		}
+
+		return types.AssignableTo(errorType, sig.Results().At(idx).Type())
+	}
+
+	return false
 }
 
 func isUnresolved(file *ast.File, ident *ast.Ident) bool {
@@ -481,17 +513,24 @@ func compileRegexps(regexps []string) ([]*regexp.Regexp, error) {
 	return compiledRegexps, nil
 }
 
+// globMatcher is the subset of a compiled gobwas/glob pattern used by the
+// analyzer. Both glob.Glob (v0) and *glob.Pattern (v1) satisfy it, so the
+// analyzer builds against either version of the module.
+type globMatcher interface {
+	Match(s string) bool
+}
+
 // compileGlobs compiles a set of globs, returning them for use,
 // or the first encountered error due to an invalid expression.
-func compileGlobs(globs []string) ([]glob.Glob, error) {
-	compiledGlobs := make([]glob.Glob, len(globs))
+func compileGlobs(globs []string) ([]globMatcher, error) {
+	compiledGlobs := make([]globMatcher, len(globs))
 	for idx, globString := range globs {
-		glob, err := glob.Compile(globString)
+		g, err := glob.Compile(globString)
 		if err != nil {
-			return nil, fmt.Errorf("unable to compile globs %s: %v\n", glob, err)
+			return nil, fmt.Errorf("unable to compile glob %q: %w", globString, err)
 		}
 
-		compiledGlobs[idx] = glob
+		compiledGlobs[idx] = g
 	}
 	return compiledGlobs, nil
 }

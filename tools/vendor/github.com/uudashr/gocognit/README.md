@@ -169,17 +169,21 @@ Usage:
 
 Flags:
 
-  -over N       show functions with complexity > N only
-                and return exit code 1 if the output is non-empty
-  -top N        show the top N most complex functions only
-  -avg          show the average complexity over all functions,
-                not depending on whether -over or -top are set
-  -test         indicates whether test files should be included
-  -json         encode the output as JSON
-  -d 	        enable diagnostic output
-  -f format     string the format to use
-                (default "{{.Complexity}} {{.PkgName}} {{.FuncName}} {{.Pos}}")
-  -ignore expr  ignore files matching the given regexp
+  -over N           show functions with complexity > N only
+                    and return exit code 1 if the output is non-empty
+  -top N            show the top N most complex functions only
+  -avg              show the average complexity over all functions,
+                    not depending on whether -over or -top are set
+  -test             indicates whether test files should be included
+  -json             encode the output as JSON
+  -d                enable diagnostic output
+  -f format         string the format to use
+                    (default "{{.Complexity}} {{.PkgName}} {{.FuncName}} {{.Pos}}")
+  -ignore expr      ignore files matching the given regexp
+  -exact-recursion  work out what each call points to, the way the compiler
+                    does, so recursion is scored exactly. Slower, and the code
+                    must build; without it, mutually recursive methods may be
+                    under-counted
 
 The (default) output fields for each line are:
 
@@ -230,6 +234,8 @@ The output fields for each line are:
 ```
 <complexity> <package> <function> <file:row:column>
 ```
+
+> **Recursion and `-exact-recursion`.** To score recursion, gocognit has to know which function each call actually goes to. By default it works that out from the source alone: fast, no build required, and fine for direct recursion and for cycles between top-level functions. It is not enough when methods call each other indirectly — for example `Walk` calls `n.Step()` and `Step` calls `n.next.Walk()` — because the type of `n` is not visible in the syntax, so that cycle can be under-counted. When that might be happening, the CLI prints a one-time note on stderr. Pass `-exact-recursion` to have gocognit work out call targets the way the compiler does, giving exact recursion scores; it is slower and needs the code to build, and it falls back to the default mode with a warning if it cannot load.
 
 ## Ignore individual functions
 Ignore individual functions by specifying `gocognit:ignore` directive.

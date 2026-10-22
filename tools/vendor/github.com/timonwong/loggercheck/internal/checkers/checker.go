@@ -4,19 +4,25 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"slices"
 
 	"golang.org/x/tools/go/analysis"
+
+	"github.com/timonwong/loggercheck/internal/nilness"
 )
 
 type Config struct {
 	RequireStringKey bool
 	NoPrintfLike     bool
+	NilStringer      bool
 }
 
 type CallContext struct {
 	Expr      *ast.CallExpr
 	Func      *types.Func
 	Signature *types.Signature
+	// Nilness is optional; without it every candidate value is reported.
+	Nilness *nilness.Index
 }
 
 type Checker interface {
@@ -39,7 +45,7 @@ var stringerType = func() *types.Interface {
 	return iface
 }()
 
-func checkStringerValues(pass *analysis.Pass, keyAndValues []ast.Expr) {
+func checkStringerValues(pass *analysis.Pass, call CallContext, keyAndValues []ast.Expr) {
 	for i := 1; i < len(keyAndValues); i += 2 {
 		arg := keyAndValues[i]
 		typ := types.Unalias(pass.TypesInfo.TypeOf(arg))
@@ -50,6 +56,10 @@ func checkStringerValues(pass *analysis.Pass, keyAndValues []ast.Expr) {
 
 		elem := types.Unalias(ptr.Elem())
 		if !types.Implements(elem, stringerType) || !types.Implements(ptr, stringerType) {
+			continue
+		}
+
+		if call.Nilness.NonNilVariadicArg(call.Expr, slices.Index(call.Expr.Args, arg)) {
 			continue
 		}
 
@@ -96,7 +106,9 @@ func ExecuteChecker(c Checker, pass *analysis.Pass, call CallContext, cfg Config
 		c.CheckLoggingKey(pass, keyValuesArgs)
 	}
 
-	checkStringerValues(pass, keyValuesArgs)
+	if cfg.NilStringer {
+		checkStringerValues(pass, call, keyValuesArgs)
+	}
 
 	if cfg.NoPrintfLike {
 		// Check all args
