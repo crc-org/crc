@@ -3,7 +3,7 @@ all: install
 SHELL := /bin/bash -o pipefail
 
 OPENSHIFT_VERSION ?= 4.22.14
-OKD_VERSION ?= 4.22.0-okd-scos.10
+OKD_VERSION ?= 5.0.0-okd-scos.4
 MICROSHIFT_VERSION ?= 4.22.13
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 2.64.0
