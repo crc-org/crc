@@ -582,8 +582,11 @@ github.com/russross/blackfriday/v2
 # github.com/sagikazarmark/locafero v0.11.0
 ## explicit; go 1.23.0
 github.com/sagikazarmark/locafero
-# github.com/sebrandon1/grab v1.2.2
+# github.com/sebrandon1/go-toolbox v0.1.1
 ## explicit; go 1.26.0
+github.com/sebrandon1/go-toolbox/httpx
+# github.com/sebrandon1/grab v1.2.3
+## explicit; go 1.26.10
 github.com/sebrandon1/grab/lib
 # github.com/secure-systems-lab/go-securesystemslib v0.11.1
 ## explicit; go 1.25.0
