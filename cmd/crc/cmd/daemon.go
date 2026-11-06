@@ -89,9 +89,11 @@ func createNewVirtualNetworkConfig(providedConfig *crcConfig.Config) types.Confi
 			{
 				Name:      "apps-crc.testing.",
 				DefaultIP: net.ParseIP("192.168.127.2"),
+				Protected: true,
 			},
 			{
-				Name: "crc.testing.",
+				Name:      "crc.testing.",
+				Protected: true,
 				Records: []types.Record{
 					{
 						Name: "host",
@@ -116,7 +118,8 @@ func createNewVirtualNetworkConfig(providedConfig *crcConfig.Config) types.Confi
 				},
 			},
 			{
-				Name: "containers.internal.",
+				Name:      "containers.internal.",
+				Protected: true,
 				Records: []types.Record{
 					{
 						Name: "gateway",
@@ -125,7 +128,8 @@ func createNewVirtualNetworkConfig(providedConfig *crcConfig.Config) types.Confi
 				},
 			},
 			{
-				Name: "docker.internal.",
+				Name:      "docker.internal.",
+				Protected: true,
 				Records: []types.Record{
 					{
 						Name: "gateway",

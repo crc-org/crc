@@ -119,6 +119,9 @@ func TestCreateNewVirtualNetworkConfig(t *testing.T) {
 	assert.Equal(t, "5a:94:ef:e4:0c:ee", virtualNetworkConfig.DHCPStaticLeases["192.168.127.2"])
 
 	assert.Len(t, virtualNetworkConfig.DNS, 4)
+	for _, zone := range virtualNetworkConfig.DNS {
+		assert.True(t, zone.Protected, "zone %s should be protected", zone.Name)
+	}
 	assert.Equal(t, "apps-crc.testing.", virtualNetworkConfig.DNS[0].Name)
 	assert.Equal(t, net.ParseIP("192.168.127.2"), virtualNetworkConfig.DNS[0].DefaultIP)
 	assert.Equal(t, "crc.testing.", virtualNetworkConfig.DNS[1].Name)
@@ -188,6 +191,32 @@ func newTestVirtualNetwork(t *testing.T) *virtualnetwork.VirtualNetwork {
 		assert.NoError(t, vn.Close())
 	})
 	return vn
+}
+
+func TestVirtualNetwork_BuiltInDNSZonesCannotBeModified(t *testing.T) {
+	vn := newTestVirtualNetwork(t)
+
+	tests := []struct {
+		name string
+		zone string
+	}{
+		{name: "apps-crc.testing", zone: `{"Name":"apps-crc.testing.","DefaultIP":"192.0.2.1"}`},
+		{name: "crc.testing", zone: `{"Name":"crc.testing.","Records":[{"Name":"api","IP":"192.0.2.1"}]}`},
+		{name: "crc.testing-uppercase", zone: `{"Name":"CRC.TESTING.","Records":[{"Name":"api-int","IP":"192.0.2.1"}]}`},
+		{name: "containers.internal", zone: `{"Name":"containers.internal.","Records":[{"Name":"gateway","IP":"192.0.2.1"}]}`},
+		{name: "docker.internal", zone: `{"Name":"docker.internal.","Records":[{"Name":"gateway","IP":"192.0.2.1"}]}`},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPost, "/services/dns/add", bytes.NewBufferString(test.zone))
+			vn.Mux().ServeHTTP(rec, req)
+
+			assert.Equal(t, http.StatusBadRequest, rec.Code)
+			assert.Contains(t, rec.Body.String(), "cannot modify protected zone")
+		})
+	}
 }
 
 func TestGatewayAPIMux_HostsEndpointsRespectModifyHostsFile(t *testing.T) {
