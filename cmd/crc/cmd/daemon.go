@@ -339,9 +339,12 @@ func gatewayAPIMux(cfg *crcConfig.Config, hostsEditor HostsFileEditor, restAPITo
 	return mux
 }
 
+// This API is only exposed in the virtual network (only the VM can reach this).
+// Any process inside the VM can reach it by connecting to host.crc.testing:80.
+// GatewayMux() only serves the port forwarding endpoints.
 func networkAPIMux(vn *virtualnetwork.VirtualNetwork) *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.Handle("/", vn.Mux())
+	mux.Handle("/", vn.GatewayMux())
 	return mux
 }
 

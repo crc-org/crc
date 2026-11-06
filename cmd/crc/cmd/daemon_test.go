@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
+	"github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork"
 	"github.com/crc-org/crc/v2/pkg/crc/api/client"
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 
@@ -177,6 +178,18 @@ func (fake *fakeHostsFileEditor) Remove(hostnames ...string) error {
 	return nil
 }
 
+func newTestVirtualNetwork(t *testing.T) *virtualnetwork.VirtualNetwork {
+	t.Helper()
+	cfg := crcConfig.New(crcConfig.NewEmptyInMemoryStorage(), crcConfig.NewEmptyInMemorySecretStorage())
+	virtualNetworkConfig := createNewVirtualNetworkConfig(cfg)
+	vn, err := virtualnetwork.New(&virtualNetworkConfig)
+	assert.NoError(t, err)
+	t.Cleanup(func() {
+		assert.NoError(t, vn.Close())
+	})
+	return vn
+}
+
 func TestGatewayAPIMux_HostsEndpointsRespectModifyHostsFile(t *testing.T) {
 	const token = "test-rest-api-token" // nolint:gosec
 	tests := []struct {
@@ -267,6 +280,39 @@ func TestGatewayAPIMux_HostsEndpointsRequireBearerToken(t *testing.T) {
 			assert.Equal(t, http.StatusUnauthorized, rec.Code)
 			assert.False(t, hostsEditor.addCalled)
 			assert.False(t, hostsEditor.removeCalled)
+		})
+	}
+}
+
+func TestNetworkAPIMux_OnlyServesForwarderEndpoints(t *testing.T) {
+	vn := newTestVirtualNetwork(t)
+
+	tests := []struct {
+		name         string
+		method       string
+		path         string
+		expectedCode int
+	}{
+		{name: "forwarder-all", method: http.MethodGet, path: "/services/forwarder/all", expectedCode: http.StatusOK},
+		{name: "unknown-forwarder-path", method: http.MethodGet, path: "/services/forwarder/other", expectedCode: http.StatusNotFound},
+		{name: "dns-all", method: http.MethodGet, path: "/services/dns/all", expectedCode: http.StatusNotFound},
+		{name: "dns-add", method: http.MethodPost, path: "/services/dns/add", expectedCode: http.StatusNotFound},
+		{name: "dhcp-leases", method: http.MethodGet, path: "/services/dhcp/leases", expectedCode: http.StatusNotFound},
+		{name: "leases", method: http.MethodGet, path: "/leases", expectedCode: http.StatusNotFound},
+		{name: "stats", method: http.MethodGet, path: "/stats", expectedCode: http.StatusNotFound},
+		{name: "cam", method: http.MethodGet, path: "/cam", expectedCode: http.StatusNotFound},
+		{name: "tunnel", method: http.MethodGet, path: "/tunnel", expectedCode: http.StatusNotFound},
+		{name: "connect", method: http.MethodPost, path: types.ConnectPath, expectedCode: http.StatusNotFound},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mux := networkAPIMux(vn)
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest(test.method, test.path, nil)
+			mux.ServeHTTP(rec, req)
+
+			assert.Equal(t, test.expectedCode, rec.Code)
 		})
 	}
 }
