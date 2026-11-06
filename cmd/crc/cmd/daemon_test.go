@@ -285,6 +285,7 @@ func TestGatewayAPIMux_HostsEndpointsRequireBearerToken(t *testing.T) {
 }
 
 func TestNetworkAPIMux_OnlyServesForwarderEndpoints(t *testing.T) {
+	const token = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" // nolint:gosec
 	vn := newTestVirtualNetwork(t)
 
 	tests := []struct {
@@ -307,12 +308,47 @@ func TestNetworkAPIMux_OnlyServesForwarderEndpoints(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mux := networkAPIMux(vn)
+			mux := networkAPIMux(vn, token)
 			rec := httptest.NewRecorder()
 			req := httptest.NewRequest(test.method, test.path, nil)
+			req.Header.Set("Authorization", "Bearer "+token)
 			mux.ServeHTTP(rec, req)
 
 			assert.Equal(t, test.expectedCode, rec.Code)
+		})
+	}
+}
+
+func TestNetworkAPIMux_ForwarderEndpointsRequireBearerToken(t *testing.T) {
+	const token = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" // nolint:gosec
+	vn := newTestVirtualNetwork(t)
+
+	tests := []struct {
+		name   string
+		method string
+		path   string
+		header string
+	}{
+		{name: "all-missing", method: http.MethodGet, path: "/services/forwarder/all"},
+		{name: "all-wrong", method: http.MethodGet, path: "/services/forwarder/all", header: "Bearer other-token"},
+		{name: "all-not-bearer", method: http.MethodGet, path: "/services/forwarder/all", header: token},
+		{name: "expose-missing", method: http.MethodPost, path: "/services/forwarder/expose"},
+		{name: "expose-wrong", method: http.MethodPost, path: "/services/forwarder/expose", header: "Bearer other-token"},
+		{name: "unexpose-missing", method: http.MethodPost, path: "/services/forwarder/unexpose"},
+		{name: "unexpose-wrong", method: http.MethodPost, path: "/services/forwarder/unexpose", header: "Bearer other-token"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mux := networkAPIMux(vn, token)
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest(test.method, test.path, nil)
+			if test.header != "" {
+				req.Header.Set("Authorization", test.header)
+			}
+			mux.ServeHTTP(rec, req)
+
+			assert.Equal(t, http.StatusUnauthorized, rec.Code)
 		})
 	}
 }

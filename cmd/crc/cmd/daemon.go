@@ -207,7 +207,7 @@ func run(configuration *types.Configuration) error {
 		return err
 	}
 	go func() {
-		mux := networkAPIMux(vn)
+		mux := networkAPIMux(vn, restAPIToken)
 		s := &http.Server{
 			Handler:      handlers.LoggingHandler(os.Stderr, mux),
 			ReadTimeout:  10 * time.Second,
@@ -342,8 +342,10 @@ func gatewayAPIMux(cfg *crcConfig.Config, hostsEditor HostsFileEditor, restAPITo
 // This API is only exposed in the virtual network (only the VM can reach this).
 // Any process inside the VM can reach it by connecting to host.crc.testing:80.
 // GatewayMux() only serves the port forwarding endpoints.
-func networkAPIMux(vn *virtualnetwork.VirtualNetwork) *http.ServeMux {
+// Requests must include Authorization: Bearer <restAPIToken>.
+func networkAPIMux(vn *virtualnetwork.VirtualNetwork, restAPIToken string) *http.ServeMux {
 	mux := http.NewServeMux()
+	vn.SetAPIToken(restAPIToken)
 	mux.Handle("/", vn.GatewayMux())
 	return mux
 }
