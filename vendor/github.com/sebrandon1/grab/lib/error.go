@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/sebrandon1/go-toolbox/httpx"
 )
 
 var (
@@ -29,6 +31,17 @@ type StatusCodeError int
 
 func (err StatusCodeError) Error() string {
 	return fmt.Sprintf("server returned %d %s", err, http.StatusText(int(err)))
+}
+
+// Unwrap exposes a StatusCodeError as the shared *httpx.HTTPError so callers
+// can use errors.As with either type. The status code is carried over; the
+// response body is not retained by StatusCodeError, so only the status text is
+// available.
+func (err StatusCodeError) Unwrap() error {
+	return &httpx.HTTPError{
+		StatusCode: int(err),
+		Body:       http.StatusText(int(err)),
+	}
 }
 
 // IsStatusCodeError returns true if the given error is of type StatusCodeError.
