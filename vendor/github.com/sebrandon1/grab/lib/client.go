@@ -9,10 +9,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/sebrandon1/go-toolbox/httpx"
 )
 
 // HTTPClient provides an interface allowing us to perform HTTP requests.
@@ -440,21 +441,10 @@ const retryAfterCap = 5 * time.Minute
 
 // retryAfter parses the Retry-After header (RFC 9110 §10.2.3): either a
 // number of seconds or an HTTP-date. It reports false if the header is
-// absent, unparseable, in the past, or beyond retryAfterCap.
+// absent, unparseable, non-positive, or beyond retryAfterCap.
 func retryAfter(h http.Header) (time.Duration, bool) {
-	v := h.Get("Retry-After")
-	if v == "" {
-		return 0, false
-	}
-	var d time.Duration
-	if secs, err := strconv.Atoi(v); err == nil {
-		d = time.Duration(secs) * time.Second
-	} else if date, err := http.ParseTime(v); err == nil {
-		d = time.Until(date)
-	} else {
-		return 0, false
-	}
-	if d < 0 || d > retryAfterCap {
+	d := httpx.ParseRetryAfter(h.Get("Retry-After"))
+	if d <= 0 || d > retryAfterCap {
 		return 0, false
 	}
 	return d, true

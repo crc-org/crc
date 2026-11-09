@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -166,143 +165,148 @@ func withMockClient(t *testing.T, mockClient *mockHTTPClient, fn func()) {
 	fn()
 }
 
-// getFallbackURLs returns a list of fallback URLs for a given size in bytes
-// These URLs provide content from different reliable sources with high availability
+// getFallbackURLs returns a list of fallback URLs for a given size in bytes.
+//
+// Small, static files on raw.githubusercontent.com come first: they are cheap
+// and are not rate-limited for shared CI egress. httpbin.org and
+// postman-echo.com were previously used here but answer HEAD with 200 and then
+// return 429 Too Many Requests to GitHub Actions runners, which made the
+// real-HTTP tests flaky. They are intentionally omitted.
 func getFallbackURLs(size int) []string {
 	urls := []string{}
 
-	// Fallback 1: httpbin.org (original, but moved to fallback)
-	urls = append(urls, fmt.Sprintf("https://httpbin.org/bytes/%d", size))
-
-	// Fallback 2: GitHub's own repository files (highly reliable)
-	urls = append(urls, "https://github.com/sebrandon1/grab/archive/refs/heads/main.zip")
-
-	// Fallback 3: Go language official downloads (very stable)
-	urls = append(urls, "https://go.dev/dl/go1.21.5.src.tar.gz")
-
-	// Fallback 4: Raw GitHub files based on size (specific content)
+	// size is nominal: every candidate below is non-empty and downloads
+	// quickly, so tests only need a reliably reachable body.
 	switch size {
 	case 256:
 		urls = append(urls,
-			"https://raw.githubusercontent.com/golang/go/master/src/go/build/testdata/empty/dummy",
-			"https://raw.githubusercontent.com/golang/go/master/VERSION",
-			"https://raw.githubusercontent.com/microsoft/vscode/main/.eslintrc.json")
+			"https://raw.githubusercontent.com/actions/checkout/main/.gitignore",
+			"https://raw.githubusercontent.com/spf13/cobra/main/go.mod",
+			"https://raw.githubusercontent.com/github/gitignore/main/Go.gitignore")
 	case 512:
 		urls = append(urls,
-			"https://raw.githubusercontent.com/kubernetes/kubernetes/master/.gitignore",
-			"https://raw.githubusercontent.com/golang/go/master/CONTRIBUTORS",
-			"https://raw.githubusercontent.com/golang/go/master/src/cmd/go/testdata/script/mod_tidy_compat.txt")
+			"https://raw.githubusercontent.com/github/gitignore/main/Go.gitignore",
+			"https://raw.githubusercontent.com/golang/go/master/SECURITY.md",
+			"https://raw.githubusercontent.com/golang/go/master/LICENSE")
 	case 768:
 		urls = append(urls,
-			"https://raw.githubusercontent.com/microsoft/vscode/main/package.json",
-			"https://raw.githubusercontent.com/golang/go/master/src/go/doc/comment.go")
+			"https://raw.githubusercontent.com/golang/go/master/LICENSE",
+			"https://raw.githubusercontent.com/golang/go/master/README.md",
+			"https://raw.githubusercontent.com/kubernetes/kubernetes/master/.gitignore")
 	case 1024:
 		urls = append(urls,
-			"https://raw.githubusercontent.com/golang/go/master/LICENSE",
-			"https://raw.githubusercontent.com/kubernetes/kubernetes/master/README.md",
-			"https://raw.githubusercontent.com/golang/go/master/SECURITY.md")
+			"https://raw.githubusercontent.com/golang/go/master/README.md",
+			"https://raw.githubusercontent.com/golang/go/master/src/go/doc/comment.go",
+			"https://raw.githubusercontent.com/kubernetes/kubernetes/master/README.md")
 	case 2048:
 		urls = append(urls,
-			"https://raw.githubusercontent.com/kubernetes/kubernetes/master/go.mod",
-			"https://raw.githubusercontent.com/golang/go/master/go.mod")
+			"https://raw.githubusercontent.com/golang/go/master/src/go/doc/comment.go",
+			"https://raw.githubusercontent.com/kubernetes/kubernetes/master/README.md",
+			"https://raw.githubusercontent.com/golang/go/master/src/cmd/go/testdata/script/mod_tidy_compat.txt")
 	default:
-		// For other sizes, add stable large files
 		urls = append(urls,
+			"https://raw.githubusercontent.com/golang/go/master/LICENSE",
 			"https://raw.githubusercontent.com/golang/go/master/README.md",
-			"https://raw.githubusercontent.com/microsoft/vscode/main/package.json",
-			"https://raw.githubusercontent.com/golang/go/master/LICENSE")
+			"https://raw.githubusercontent.com/microsoft/vscode/main/package.json")
 	}
 
-	// Fallback 5: postman-echo.com (alternative to httpbin)
-	urls = append(urls, fmt.Sprintf("https://postman-echo.com/bytes/%d", size))
+	// Last-resort fallbacks on other hosts: small, stable, and cheap to
+	// download even when the nominal test file is only a few hundred bytes.
+	urls = append(urls,
+		"https://go.dev/VERSION?m=text",
+		"https://proxy.golang.org/golang.org/x/text/@v/list")
 
 	return urls
 }
 
-// testURLAccessibility tests if a URL is accessible and returns the expected content
-// It returns true if the URL responds with a 2xx status code
-// Uses multiple retry attempts with exponential backoff for better reliability
+// testHTTPClient is shared so the probes started by getWorkingURL reuse
+// connections instead of opening a new transport per URL.
+var testHTTPClient = &http.Client{Timeout: 3 * time.Second}
+
+// testURLAccessibility reports whether url currently serves a 2xx response to
+// the same GET request the download code will make. Probing with GET (rather
+// than HEAD) matters: some hosts answer HEAD successfully but rate-limit GET.
+// The body is closed immediately, so only the response headers are consumed.
 func testURLAccessibility(url string) bool {
-	client := &http.Client{
-		Timeout: 3 * time.Second, // Shorter timeout per attempt
-	}
-
-	maxRetries := 2
-	for attempt := 0; attempt <= maxRetries; attempt++ {
-		resp, err := client.Head(url)
+	const maxAttempts = 2
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		resp, err := testHTTPClient.Get(url)
 		if err == nil {
-			defer func() {
-				if resp.Body != nil {
-					_ = resp.Body.Close()
-				}
-			}()
-
+			_ = resp.Body.Close()
 			if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 				return true
 			}
 		}
 
-		// Wait before retry (exponential backoff)
-		if attempt < maxRetries {
-			time.Sleep(time.Duration(100*(attempt+1)) * time.Millisecond)
+		if attempt < maxAttempts {
+			time.Sleep(time.Duration(attempt) * 100 * time.Millisecond)
 		}
 	}
 
 	return false
 }
 
-// getWorkingURL tries a list of URLs and returns the first accessible one
-// If none work, returns a highly reliable fallback URL
+// workingURLCache memoizes the working URL chosen for each fallback list so a
+// test run probes each host at most once. resetWorkingURLs clears it so a
+// retrying test can recover if a cached host starts rate-limiting.
+var workingURLCache sync.Map // map[string]string
+
+// getWorkingURL returns the first URL in list order that is currently
+// accessible. Probes run concurrently for speed, but the choice is the
+// lowest-index success, so it is deterministic regardless of which host
+// responds first. Successful choices are cached for the rest of the test run.
 func getWorkingURL(urls []string) string {
-	// Test URLs concurrently for faster response
-	type result struct {
-		url   string
+	if len(urls) == 0 {
+		return ""
+	}
+
+	cacheKey := strings.Join(urls, "\n")
+	if cached, ok := workingURLCache.Load(cacheKey); ok {
+		return cached.(string)
+	}
+
+	type probe struct {
+		index int
 		works bool
 	}
-
-	results := make(chan result, len(urls))
-
-	// Test first few URLs concurrently
-	testCount := len(urls)
-	if testCount > 3 {
-		testCount = 3 // Limit concurrent tests for performance
+	probes := make(chan probe, len(urls))
+	for i, url := range urls {
+		go func(i int, url string) {
+			probes <- probe{index: i, works: testURLAccessibility(url)}
+		}(i, url)
 	}
 
-	for i := 0; i < testCount; i++ {
-		go func(url string) {
-			works := testURLAccessibility(url)
-			results <- result{url: url, works: works}
-		}(urls[i])
-	}
-
-	// Collect results
-	for i := 0; i < testCount; i++ {
-		r := <-results
-		if r.works {
-			return r.url
+	best := -1
+	for range urls {
+		if p := <-probes; p.works && (best == -1 || p.index < best) {
+			best = p.index
 		}
 	}
 
-	// If none of the tested URLs work, try the rest sequentially
-	for i := testCount; i < len(urls); i++ {
-		if testURLAccessibility(urls[i]) {
-			return urls[i]
-		}
+	if best >= 0 {
+		workingURLCache.Store(cacheKey, urls[best])
+		return urls[best]
 	}
 
-	// Ultimate fallback: use a highly reliable GitHub URL regardless of size
-	// This ensures tests don't fail due to external service unavailability
-	fallback := "https://github.com/sebrandon1/grab/archive/refs/heads/main.zip"
-	if testURLAccessibility(fallback) {
-		return fallback
+	// Ultimate fallback on a separate host, independent of the list above.
+	// This ensures tests don't fail due to external service unavailability.
+	const ultimateFallback = "https://go.dev/VERSION?m=text"
+	if testURLAccessibility(ultimateFallback) {
+		return ultimateFallback
 	}
 
-	// If even GitHub is down, return the first URL to allow normal test failure
-	if len(urls) > 0 {
-		return urls[0]
-	}
+	// If nothing is reachable, return the first URL to allow normal test
+	// failure. Do not cache this: a later call may succeed.
+	return urls[0]
+}
 
-	return ""
+// resetWorkingURLs drops the memoized URL choices so the next getWorkingURL
+// call re-probes the hosts. Tests call it before retrying a failed attempt.
+func resetWorkingURLs() {
+	workingURLCache.Range(func(key, _ any) bool {
+		workingURLCache.Delete(key)
+		return true
+	})
 }
 
 // getWorkingURLs tries multiple URL lists and returns working URLs for each
