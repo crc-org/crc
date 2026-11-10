@@ -688,8 +688,8 @@ func CheckCRCStatusJSONOutput() error {
 		return fmt.Errorf("failure in asserting 'openshiftStatus' field of crc status json output, expected : 'Running', actual : %s", crcOpenShiftStatus)
 	}
 	crcOpenShiftVersion := crcStatusJSONOutputObj["openshiftVersion"]
-	if !strings.HasPrefix(cast.ToString(crcOpenShiftVersion), "4.") {
-		return fmt.Errorf("failure in asserting 'openshiftVersion' field of crc status json output, expected with prefix: '4.', actual : %s", crcOpenShiftVersion)
+	if !strings.HasPrefix(cast.ToString(crcOpenShiftVersion), "5.") {
+		return fmt.Errorf("failure in asserting 'openshiftVersion' field of crc status json output, expected with prefix: '5.', actual : %s", crcOpenShiftVersion)
 	}
 	crcPresetStr := crcStatusJSONOutputObj["preset"]
 	crcPreset, err := preset.ParsePresetE(crcPresetStr.(string))
