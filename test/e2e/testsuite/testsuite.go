@@ -86,12 +86,6 @@ func InitializeTestSuite(tctx *godog.TestSuiteContext) {
 			CRCExecutable = filepath.Join(usr.HomeDir, "go", "bin")
 		}
 
-		// Force debug logs
-		err = os.Setenv("CRC_LOG_LEVEL", "debug")
-		if err != nil {
-			fmt.Println("Could not set `CRC_LOG_LEVEL` to `debug`:", err)
-		}
-
 		// put CRC executable location on top of PATH
 		path := os.Getenv("PATH")
 		newPath := fmt.Sprintf("%s%c%s", CRCExecutable, os.PathListSeparator, path)

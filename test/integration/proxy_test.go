@@ -23,7 +23,6 @@ func runCRCWithLiveOutput(args ...string) error {
 	cmd := exec.Command("crc", args...)
 	cmd.Env = append(os.Environ(),
 		"CRC_DISABLE_UPDATE_CHECK=true",
-		"CRC_LOG_LEVEL=debug",
 	)
 
 	// Direct stdout and stderr to terminal for real-time output
