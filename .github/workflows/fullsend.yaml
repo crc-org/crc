@@ -42,7 +42,7 @@ jobs:
     if: >-
       github.event_name != 'issue_comment'
       || github.event.comment.user.type != 'Bot'
-    uses: fullsend-ai/fullsend/.github/workflows/reusable-dispatch.yml@25811c9a815e2c27d397d41e45c59819b1302f54 # v0.53.0
+    uses: fullsend-ai/fullsend/.github/workflows/reusable-dispatch.yml@90b7310ff8751a3c70e5d68214770dc168a1cbe7 # v0.54.0
     with:
       event_action: ${{ github.event.action }}
       install_mode: per-repo
