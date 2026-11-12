@@ -23,7 +23,6 @@ type CRCBuilder struct {
 func NewCRCCommand(args ...string) *CRCBuilder {
 	cmd := exec.Command("crc", args...)
 	cmd.Env = append(os.Environ(), util.EnvVariable("CRC_DISABLE_UPDATE_CHECK", "true"))
-	cmd.Env = append(cmd.Env, util.EnvVariable("CRC_LOG_LEVEL", "debug"))
 	return &CRCBuilder{
 		cmd: cmd,
 	}
