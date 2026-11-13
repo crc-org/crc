@@ -47,6 +47,12 @@ func UseMacadam() Config {
 	// binary itself: this is ~/.crc/bin for non-installer builds, and the
 	// installation directory (which also ships gvproxy) for installer builds.
 	env["CONTAINERS_HELPER_BINARY_DIR"] = filepath.Dir(constants.MacadamPath())
+	// macadam v0.4.0 only sets PODMAN_TOOL_PREFIX for the WSL provider, on
+	// Hyper-V the tool name then defaults to "podman" and macadam cannot find
+	// the vsock registry entries created by the installer (which use
+	// ToolName=macadam). Set it explicitly until a macadam release includes
+	// the fix (crc-org/macadam commit b8f2cf1b).
+	env["PODMAN_TOOL_PREFIX"] = "macadam"
 
 	return Config{
 		Runner:                crcos.NewLocalCommandRunner(),

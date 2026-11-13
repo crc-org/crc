@@ -1,6 +1,7 @@
 package macadam
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
@@ -12,7 +13,9 @@ func TestUseMacadam(t *testing.T) {
 	assert.NotNil(t, config.Runner)
 	assert.Equal(t, constants.MacadamPath(), config.MacadamExecutablePath)
 	assert.NotNil(t, config.Env)
-	assert.Equal(t, 1, len(config.Env))
+	assert.Equal(t, filepath.Dir(constants.MacadamPath()), config.Env["CONTAINERS_HELPER_BINARY_DIR"])
+	assert.Equal(t, "macadam", config.Env["PODMAN_TOOL_PREFIX"])
+	assert.Len(t, config.Env, 2)
 }
 
 func TestVMOptions(t *testing.T) {
