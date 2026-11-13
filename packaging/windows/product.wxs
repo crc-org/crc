@@ -72,8 +72,11 @@
             <ComponentRef Id="CrcExe" />
             <ComponentRef Id="AdminHelper" />
             <ComponentRef Id="BackgroundLauncher" />
+            <ComponentRef Id="Gvproxy" />
+            <ComponentRef Id="Macadam" />
             <ComponentRef Id="AddToPath" />
             <ComponentRef Id="VsockRegistryEntry" />
+            <ComponentRef Id="VsockEventsRegistryEntry" />
             <ComponentRef Id="Hvsock9pRegistryEntry" />
             <ComponentRef Id="CreateCrcUsersGroupAddUser" />
         </Feature>
@@ -108,13 +111,31 @@
                 <Component Id="BackgroundLauncher">
                     <File Id="BackgroundLauncher" Source=".\win32-background-launcher.exe" Name="crc-background-launcher.exe" KeyPath="yes" DiskId="1" />
                 </Component>
+                <Component Id="Gvproxy">
+                    <File Id="Gvproxy" Source=".\gvproxy-windows.exe" Name="gvproxy.exe" KeyPath="yes" DiskId="1" />
+                </Component>
+                <Component Id="Macadam">
+                    <File Id="Macadam" Source=".\macadam-windows-amd64.exe" KeyPath="yes" DiskId="1" />
+                </Component>
                 <Component Id="AddToPath" Guid="09C1E713-44DE-44C3-BDAD-72BE10C10542">
                     <CreateFolder />
                     <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes" />
                 </Component>
                 <Component Id="VsockRegistryEntry">
+                    <!-- hvsock entry for user-mode networking (gvproxy), as expected by macadam/podman -->
                     <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices\00000400-FACB-11E6-BD58-64006A7986D3">
                         <RegistryValue Type="string" Name="ElementName" Value="gvisor-tap-vsock" KeyPath="yes" />
+                        <RegistryValue Type="string" Name="Purpose" Value="Network" />
+                        <RegistryValue Type="string" Name="ToolName" Value="macadam" />
+                        <RegistryValue Type="integer" Name="KeepAfterMachineRemove" Value="1" />
+                    </RegistryKey>
+                </Component>
+                <Component Id="VsockEventsRegistryEntry" Guid="*">
+                    <!-- hvsock entry for machine events notifications, as expected by macadam/podman -->
+                    <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices\00000401-FACB-11E6-BD58-64006A7986D3">
+                        <RegistryValue Type="string" Name="Purpose" Value="Events" KeyPath="yes" />
+                        <RegistryValue Type="string" Name="ToolName" Value="macadam" />
+                        <RegistryValue Type="integer" Name="KeepAfterMachineRemove" Value="1" />
                     </RegistryKey>
                 </Component>
                 <Component Id="Hvsock9pRegistryEntry" Guid="*">

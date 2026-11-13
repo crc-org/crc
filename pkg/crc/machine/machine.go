@@ -9,8 +9,6 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/machine/bundle"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
 	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
-	"github.com/crc-org/crc/v2/pkg/libmachine"
-	"github.com/crc-org/machine/libmachine/drivers"
 )
 
 func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*types.ClusterConfig, error) {
@@ -47,27 +45,6 @@ func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*types.ClusterConfig, e
 		ClusterAPI:    fmt.Sprintf("https://%s:6443", bundleInfo.GetAPIHostname()),
 		ProxyConfig:   proxyConfig,
 	}, nil
-}
-
-func getBundleMetadataFromDriver(driver drivers.Driver) (*bundle.CrcBundleInfo, error) {
-	bundleName, err := driver.GetBundleName()
-	if err != nil {
-		err := fmt.Errorf("Error getting bundle name from CRC instance, make sure you ran 'crc setup' and are using the latest bundle")
-		return nil, err
-	}
-	metadata, err := bundle.Get(bundleName)
-	if err != nil {
-		return nil, err
-	}
-
-	return metadata, err
-}
-
-func createLibMachineClient() (libmachine.API, func()) {
-	client := libmachine.NewClient(constants.MachineBaseDir)
-	return client, func() {
-		client.Close()
-	}
 }
 
 func getProxyConfig(bundleInfo *bundle.CrcBundleInfo) (*httpproxy.ProxyConfig, error) {

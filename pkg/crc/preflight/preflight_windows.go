@@ -181,20 +181,44 @@ const (
 	// First part of the key is the vsock port. The rest is not used and just a placeholder.
 	gvisorVsockRegistryKey   = "00000400-FACB-11E6-BD58-64006A7986D3"
 	gvisorVsockRegistryValue = "gvisor-tap-vsock"
-	fs9pVsockRegistryKey     = "00009000-FACB-11E6-BD58-64006A7986D3"
-	fs9pVsockRegistryValue   = "fs9p-hvsock"
+	// macadam (podman machine) needs an additional hvsock registry entry for
+	// events notifications. Both entries must carry the values expected by
+	// podman's loadHVSockRegistryEntries (Purpose/ToolName), otherwise a
+	// non-elevated user cannot create Hyper-V machines.
+	eventsVsockRegistryKey = "00000401-FACB-11E6-BD58-64006A7986D3"
+	vsockPurposeNetwork    = "Network"
+	vsockPurposeEvents     = "Events"
+	vsockToolName          = "macadam"
+	fs9pVsockRegistryKey   = "00009000-FACB-11E6-BD58-64006A7986D3"
+	fs9pVsockRegistryValue = "fs9p-hvsock"
 )
 
-func checkVsock() error {
-	stdout, _, err := powershell.Execute(fmt.Sprintf(`Get-Item -Path "%s\%s"`, vsockRegistryDirectory, gvisorVsockRegistryKey))
+// checkMacadamVsockRegistryEntry checks that the hvsock registry entry at key
+// has the Purpose/ToolName values expected by macadam (podman machine)
+func checkMacadamVsockRegistryEntry(key, purpose string) error {
+	stdout, _, err := powershell.Execute(fmt.Sprintf(`Get-ItemProperty -Path "%s\%s"`, vsockRegistryDirectory, key))
 	if err != nil {
-		return fmt.Errorf("failed to read gvisor vsock registry key: %w", err)
+		return fmt.Errorf("failed to read vsock registry key %s: %w", key, err)
 	}
-	if !strings.Contains(stdout, gvisorVsockRegistryValue) {
-		return errors.New("VSock registry key for gvisor not correctly configured")
+	if !strings.Contains(stdout, purpose) {
+		return fmt.Errorf("vsock registry key %s does not have Purpose set to %s", key, purpose)
+	}
+	if !strings.Contains(stdout, vsockToolName) {
+		return fmt.Errorf("vsock registry key %s does not have ToolName set to %s", key, vsockToolName)
+	}
+	return nil
+}
+
+func checkVsock() error {
+	if err := checkMacadamVsockRegistryEntry(gvisorVsockRegistryKey, vsockPurposeNetwork); err != nil {
+		return err
 	}
 
-	stdout, _, err = powershell.Execute(fmt.Sprintf(`Get-Item -Path "%s\%s"`, vsockRegistryDirectory, fs9pVsockRegistryKey))
+	if err := checkMacadamVsockRegistryEntry(eventsVsockRegistryKey, vsockPurposeEvents); err != nil {
+		return err
+	}
+
+	stdout, _, err := powershell.Execute(fmt.Sprintf(`Get-Item -Path "%s\%s"`, vsockRegistryDirectory, fs9pVsockRegistryKey))
 	if err != nil {
 		return fmt.Errorf("failed to read 9P vsock registry key: %w", err)
 	}
@@ -223,6 +247,8 @@ func getChecks(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallb
 	checks = append(checks, userPartOfCrcUsersAndHypervAdminsGroupCheck)
 	checks = append(checks, vsockChecks...)
 	checks = append(checks, bundleCheck(bundlePath, preset, enableBundleQuayFallback))
+	checks = append(checks, gvproxyCheck())
+	checks = append(checks, macadamCheck())
 	checks = append(checks, genericCleanupChecks...)
 	checks = append(checks, cleanupCheckRemoveCrcVM)
 	checks = append(checks, daemonTaskChecks...)
@@ -236,4 +262,13 @@ func getPreflightChecks(_ bool, networkMode network.Mode, bundlePath string, pre
 	filter.SetNetworkMode(networkMode)
 
 	return filter.Apply(getChecks(bundlePath, preset, enableBundleQuayFallback))
+}
+
+// setCapNetBindService is a no-op on Windows since it doesn't use Linux capabilities
+func setCapNetBindService(_ string) error {
+	return nil
+}
+
+func checkCapNetBindService(_ string) error {
+	return nil
 }
