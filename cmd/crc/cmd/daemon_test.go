@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
+	"github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork"
 	"github.com/crc-org/crc/v2/pkg/crc/api/client"
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 
@@ -118,6 +119,9 @@ func TestCreateNewVirtualNetworkConfig(t *testing.T) {
 	assert.Equal(t, "5a:94:ef:e4:0c:ee", virtualNetworkConfig.DHCPStaticLeases["192.168.127.2"])
 
 	assert.Len(t, virtualNetworkConfig.DNS, 4)
+	for _, zone := range virtualNetworkConfig.DNS {
+		assert.True(t, zone.Protected, "zone %s should be protected", zone.Name)
+	}
 	assert.Equal(t, "apps-crc.testing.", virtualNetworkConfig.DNS[0].Name)
 	assert.Equal(t, net.ParseIP("192.168.127.2"), virtualNetworkConfig.DNS[0].DefaultIP)
 	assert.Equal(t, "crc.testing.", virtualNetworkConfig.DNS[1].Name)
@@ -175,6 +179,44 @@ func (fake *fakeHostsFileEditor) Remove(hostnames ...string) error {
 	fake.removeCalled = true
 	fake.removeHosts = append([]string(nil), hostnames...)
 	return nil
+}
+
+func newTestVirtualNetwork(t *testing.T) *virtualnetwork.VirtualNetwork {
+	t.Helper()
+	cfg := crcConfig.New(crcConfig.NewEmptyInMemoryStorage(), crcConfig.NewEmptyInMemorySecretStorage())
+	virtualNetworkConfig := createNewVirtualNetworkConfig(cfg)
+	vn, err := virtualnetwork.New(&virtualNetworkConfig)
+	assert.NoError(t, err)
+	t.Cleanup(func() {
+		assert.NoError(t, vn.Close())
+	})
+	return vn
+}
+
+func TestVirtualNetwork_BuiltInDNSZonesCannotBeModified(t *testing.T) {
+	vn := newTestVirtualNetwork(t)
+
+	tests := []struct {
+		name string
+		zone string
+	}{
+		{name: "apps-crc.testing", zone: `{"Name":"apps-crc.testing.","DefaultIP":"192.0.2.1"}`},
+		{name: "crc.testing", zone: `{"Name":"crc.testing.","Records":[{"Name":"api","IP":"192.0.2.1"}]}`},
+		{name: "crc.testing-uppercase", zone: `{"Name":"CRC.TESTING.","Records":[{"Name":"api-int","IP":"192.0.2.1"}]}`},
+		{name: "containers.internal", zone: `{"Name":"containers.internal.","Records":[{"Name":"gateway","IP":"192.0.2.1"}]}`},
+		{name: "docker.internal", zone: `{"Name":"docker.internal.","Records":[{"Name":"gateway","IP":"192.0.2.1"}]}`},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPost, "/services/dns/add", bytes.NewBufferString(test.zone))
+			vn.Mux().ServeHTTP(rec, req)
+
+			assert.Equal(t, http.StatusBadRequest, rec.Code)
+			assert.Contains(t, rec.Body.String(), "cannot modify protected zone")
+		})
+	}
 }
 
 func TestGatewayAPIMux_HostsEndpointsRespectModifyHostsFile(t *testing.T) {
@@ -267,6 +309,75 @@ func TestGatewayAPIMux_HostsEndpointsRequireBearerToken(t *testing.T) {
 			assert.Equal(t, http.StatusUnauthorized, rec.Code)
 			assert.False(t, hostsEditor.addCalled)
 			assert.False(t, hostsEditor.removeCalled)
+		})
+	}
+}
+
+func TestNetworkAPIMux_OnlyServesForwarderEndpoints(t *testing.T) {
+	const token = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" // nolint:gosec
+	vn := newTestVirtualNetwork(t)
+
+	tests := []struct {
+		name         string
+		method       string
+		path         string
+		expectedCode int
+	}{
+		{name: "forwarder-all", method: http.MethodGet, path: "/services/forwarder/all", expectedCode: http.StatusOK},
+		{name: "unknown-forwarder-path", method: http.MethodGet, path: "/services/forwarder/other", expectedCode: http.StatusNotFound},
+		{name: "dns-all", method: http.MethodGet, path: "/services/dns/all", expectedCode: http.StatusNotFound},
+		{name: "dns-add", method: http.MethodPost, path: "/services/dns/add", expectedCode: http.StatusNotFound},
+		{name: "dhcp-leases", method: http.MethodGet, path: "/services/dhcp/leases", expectedCode: http.StatusNotFound},
+		{name: "leases", method: http.MethodGet, path: "/leases", expectedCode: http.StatusNotFound},
+		{name: "stats", method: http.MethodGet, path: "/stats", expectedCode: http.StatusNotFound},
+		{name: "cam", method: http.MethodGet, path: "/cam", expectedCode: http.StatusNotFound},
+		{name: "tunnel", method: http.MethodGet, path: "/tunnel", expectedCode: http.StatusNotFound},
+		{name: "connect", method: http.MethodPost, path: types.ConnectPath, expectedCode: http.StatusNotFound},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mux := networkAPIMux(vn, token)
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest(test.method, test.path, nil)
+			req.Header.Set("Authorization", "Bearer "+token)
+			mux.ServeHTTP(rec, req)
+
+			assert.Equal(t, test.expectedCode, rec.Code)
+		})
+	}
+}
+
+func TestNetworkAPIMux_ForwarderEndpointsRequireBearerToken(t *testing.T) {
+	const token = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" // nolint:gosec
+	vn := newTestVirtualNetwork(t)
+
+	tests := []struct {
+		name   string
+		method string
+		path   string
+		header string
+	}{
+		{name: "all-missing", method: http.MethodGet, path: "/services/forwarder/all"},
+		{name: "all-wrong", method: http.MethodGet, path: "/services/forwarder/all", header: "Bearer other-token"},
+		{name: "all-not-bearer", method: http.MethodGet, path: "/services/forwarder/all", header: token},
+		{name: "expose-missing", method: http.MethodPost, path: "/services/forwarder/expose"},
+		{name: "expose-wrong", method: http.MethodPost, path: "/services/forwarder/expose", header: "Bearer other-token"},
+		{name: "unexpose-missing", method: http.MethodPost, path: "/services/forwarder/unexpose"},
+		{name: "unexpose-wrong", method: http.MethodPost, path: "/services/forwarder/unexpose", header: "Bearer other-token"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mux := networkAPIMux(vn, token)
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest(test.method, test.path, nil)
+			if test.header != "" {
+				req.Header.Set("Authorization", test.header)
+			}
+			mux.ServeHTTP(rec, req)
+
+			assert.Equal(t, http.StatusUnauthorized, rec.Code)
 		})
 	}
 }
