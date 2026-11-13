@@ -2,6 +2,7 @@ $ErrorActionPreference = 'Stop';
 $CrcGroupName = 'crc-users'
 $CrcAdminHelperServiceName = 'crcAdminHelper'
 $VsockGuestCommunicationRegistryPath = "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices\00000400-FACB-11E6-BD58-64006A7986D3"
+$VsockEventsGuestCommunicationRegistryPath = "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices\00000401-FACB-11E6-BD58-64006A7986D3"
 
 function New-CrcGroup {
     $crcgrp = Get-LocalGroup -Name $CrcGroupName -ErrorAction SilentlyContinue
@@ -73,4 +74,15 @@ function New-VsockGuestCommunicationRegistry {
         Remove-ItemProperty -Path $VsockGuestCommunicationRegistryPath -Name 'ElementName' -ErrorAction SilentlyContinue | Out-Null
         New-ItemProperty -Path $VsockGuestCommunicationRegistryPath -Name 'ElementName' -Value 'gvisor-tap-vsock' -PropertyType string -Confirm:$false | Out-Null
     }
+    # macadam/podman expects these values on the network hvsock registry entry,
+    # they allow a non-elevated user to create Hyper-V machines
+    New-Item -Path $VsockGuestCommunicationRegistryPath -ErrorAction SilentlyContinue | Out-Null
+    New-ItemProperty -Path $VsockGuestCommunicationRegistryPath -Name 'Purpose' -Value 'Network' -PropertyType string -Force | Out-Null
+    New-ItemProperty -Path $VsockGuestCommunicationRegistryPath -Name 'ToolName' -Value 'macadam' -PropertyType string -Force | Out-Null
+    New-ItemProperty -Path $VsockGuestCommunicationRegistryPath -Name 'KeepAfterMachineRemove' -Value 1 -PropertyType DWord -Force | Out-Null
+    # events hvsock registry entry, also expected by macadam/podman
+    New-Item -Path $VsockEventsGuestCommunicationRegistryPath -ErrorAction SilentlyContinue | Out-Null
+    New-ItemProperty -Path $VsockEventsGuestCommunicationRegistryPath -Name 'Purpose' -Value 'Events' -PropertyType string -Force | Out-Null
+    New-ItemProperty -Path $VsockEventsGuestCommunicationRegistryPath -Name 'ToolName' -Value 'macadam' -PropertyType string -Force | Out-Null
+    New-ItemProperty -Path $VsockEventsGuestCommunicationRegistryPath -Name 'KeepAfterMachineRemove' -Value 1 -PropertyType DWord -Force | Out-Null
 }
