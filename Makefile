@@ -319,10 +319,14 @@ goversioncheck:
 	./verify-go-version.sh
 
 .PHONY: embed-download-windows embed-download-darwin
-embed-download-windows embed-download-darwin: embed-download-%: $(HOST_BUILD_DIR)/crc-embedder
 ifeq ($(CUSTOM_EMBED),false)
+embed-download-windows embed-download-darwin: embed-download-%: $(HOST_BUILD_DIR)/crc-embedder
 	mkdir -p $(EMBED_DOWNLOAD_DIR)
 	$(HOST_BUILD_DIR)/crc-embedder download --goos=$* $(EMBED_DOWNLOAD_DIR)
+else
+embed-download-windows embed-download-darwin:
+	@test -n "$$(ls -A "$(EMBED_DOWNLOAD_DIR)" 2>/dev/null)" || { echo "Error: CUSTOM_EMBED=true but '$(EMBED_DOWNLOAD_DIR)' is missing or empty"; exit 1; }
+	@echo "CUSTOM_EMBED=true: using pre-fetched helpers in $(EMBED_DOWNLOAD_DIR)"
 endif
 
 $(BUILD_DIR)/macos-universal/crc: $(BUILD_DIR)/macos-arm64/crc $(BUILD_DIR)/macos-amd64/crc $(TOOLS_BINDIR)/makefat
