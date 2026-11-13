@@ -181,20 +181,54 @@ const (
 	// First part of the key is the vsock port. The rest is not used and just a placeholder.
 	gvisorVsockRegistryKey   = "00000400-FACB-11E6-BD58-64006A7986D3"
 	gvisorVsockRegistryValue = "gvisor-tap-vsock"
-	fs9pVsockRegistryKey     = "00009000-FACB-11E6-BD58-64006A7986D3"
-	fs9pVsockRegistryValue   = "fs9p-hvsock"
+	// macadam (podman machine) needs an additional hvsock registry entry for
+	// events notifications. Both entries must carry the values expected by
+	// podman's loadHVSockRegistryEntries (KeepAfterMachineRemove, matching
+	// Purpose and MachineName), otherwise a non-elevated user cannot create
+	// Hyper-V machines. ToolName is informational only.
+	eventsVsockRegistryKey = "00000401-FACB-11E6-BD58-64006A7986D3"
+	vsockPurposeNetwork    = "Network"
+	vsockPurposeEvents     = "Events"
+	vsockToolName          = "macadam"
+	fs9pVsockRegistryKey   = "00009000-FACB-11E6-BD58-64006A7986D3"
+	fs9pVsockRegistryValue = "fs9p-hvsock"
 )
 
-func checkVsock() error {
-	stdout, _, err := powershell.Execute(fmt.Sprintf(`Get-Item -Path "%s\%s"`, vsockRegistryDirectory, gvisorVsockRegistryKey))
+// checkMacadamVsockRegistryEntry checks that the hvsock registry entry at key
+// has the values expected by macadam (podman machine): entryCanBeReusedBy only
+// accepts entries with KeepAfterMachineRemove set, a matching Purpose and a
+// MachineName matching the crc machine name. ToolName is informational.
+func checkMacadamVsockRegistryEntry(key, purpose string) error {
+	stdout, _, err := powershell.Execute(fmt.Sprintf(`Get-ItemProperty -Path "%s\%s"`, vsockRegistryDirectory, key))
 	if err != nil {
-		return fmt.Errorf("failed to read gvisor vsock registry key: %w", err)
+		return fmt.Errorf("failed to read vsock registry key %s: %w", key, err)
 	}
-	if !strings.Contains(stdout, gvisorVsockRegistryValue) {
-		return errors.New("VSock registry key for gvisor not correctly configured")
+	expectedValues := map[string]string{
+		"Purpose":     purpose,
+		"MachineName": constants.DefaultName,
+		"ToolName":    vsockToolName,
+	}
+	for name, value := range expectedValues {
+		if !strings.Contains(stdout, value) {
+			return fmt.Errorf("vsock registry key %s does not have %s set to %s", key, name, value)
+		}
+	}
+	if !strings.Contains(stdout, "KeepAfterMachineRemove") {
+		return fmt.Errorf("vsock registry key %s does not have KeepAfterMachineRemove set", key)
+	}
+	return nil
+}
+
+func checkVsock() error {
+	if err := checkMacadamVsockRegistryEntry(gvisorVsockRegistryKey, vsockPurposeNetwork); err != nil {
+		return err
 	}
 
-	stdout, _, err = powershell.Execute(fmt.Sprintf(`Get-Item -Path "%s\%s"`, vsockRegistryDirectory, fs9pVsockRegistryKey))
+	if err := checkMacadamVsockRegistryEntry(eventsVsockRegistryKey, vsockPurposeEvents); err != nil {
+		return err
+	}
+
+	stdout, _, err := powershell.Execute(fmt.Sprintf(`Get-Item -Path "%s\%s"`, vsockRegistryDirectory, fs9pVsockRegistryKey))
 	if err != nil {
 		return fmt.Errorf("failed to read 9P vsock registry key: %w", err)
 	}
