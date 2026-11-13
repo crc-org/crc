@@ -36,6 +36,7 @@ RELEASE_INFO := release-info.json
 
 CUSTOM_EMBED ?= false
 EMBED_DOWNLOAD_DIR ?= tmp-embed
+CRC_BIN ?=
 
 SELINUX_VOLUME_LABEL = :Z
 ifeq ($(GOOS),darwin)
@@ -103,8 +104,14 @@ $(BUILD_DIR)/linux-amd64/crc: $(SOURCES)
 $(BUILD_DIR)/linux-arm64/crc: $(SOURCES)
 	GOOS=linux GOARCH=arm64 go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $@ $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
+ifeq ($(CRC_BIN),)
 $(BUILD_DIR)/windows-amd64/crc.exe: $(SOURCES)
 	GOOS=windows GOARCH=amd64 go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $@ $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
+else
+$(BUILD_DIR)/windows-amd64/crc.exe: $(CRC_BIN)
+	mkdir -p $(@D)
+	cp "$(CRC_BIN)" $@
+endif
 
 $(HOST_BUILD_DIR)/crc-embedder: $(SOURCES)
 	go build --tags="build" -ldflags="$(LDFLAGS)" -o $(HOST_BUILD_DIR)/crc-embedder $(GO_EXTRA_BUILDFLAGS) ./cmd/crc-embedder
@@ -319,15 +326,21 @@ goversioncheck:
 	./verify-go-version.sh
 
 .PHONY: embed-download-windows embed-download-darwin
-embed-download-windows embed-download-darwin: embed-download-%: $(HOST_BUILD_DIR)/crc-embedder
 ifeq ($(CUSTOM_EMBED),false)
+embed-download-windows embed-download-darwin: embed-download-%: $(HOST_BUILD_DIR)/crc-embedder
 	mkdir -p $(EMBED_DOWNLOAD_DIR)
 	$(HOST_BUILD_DIR)/crc-embedder download --goos=$* $(EMBED_DOWNLOAD_DIR)
 endif
 
+ifeq ($(CRC_BIN),)
 $(BUILD_DIR)/macos-universal/crc: $(BUILD_DIR)/macos-arm64/crc $(BUILD_DIR)/macos-amd64/crc $(TOOLS_BINDIR)/makefat
 	mkdir -p out/macos-universal
 	cd $(BUILD_DIR) && "$(TOOLS_BINDIR)"/makefat macos-universal/crc macos-amd64/crc macos-arm64/crc
+else
+$(BUILD_DIR)/macos-universal/crc: $(CRC_BIN)
+	mkdir -p $(@D)
+	cp "$(CRC_BIN)" $@
+endif
 
 packagedir: clean_macos_package embed-download-darwin macos-release-binary
 	echo -n $(CRC_VERSION) > packaging/darwin/VERSION
