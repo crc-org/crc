@@ -2,6 +2,8 @@ module github.com/crc-org/crc/v2
 
 go 1.26.7
 
+toolchain go1.26.10
+
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/DeedleFake/p9 v0.7.2
