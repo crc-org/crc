@@ -319,8 +319,8 @@ goversioncheck:
 	./verify-go-version.sh
 
 .PHONY: embed-download-windows embed-download-darwin
-embed-download-windows embed-download-darwin: embed-download-%: $(HOST_BUILD_DIR)/crc-embedder
 ifeq ($(CUSTOM_EMBED),false)
+embed-download-windows embed-download-darwin: embed-download-%: $(HOST_BUILD_DIR)/crc-embedder
 	mkdir -p $(EMBED_DOWNLOAD_DIR)
 	$(HOST_BUILD_DIR)/crc-embedder download --goos=$* $(EMBED_DOWNLOAD_DIR)
 endif
