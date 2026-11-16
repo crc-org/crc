@@ -10,7 +10,7 @@ CRC - Runs Containers
 
 
 ## Introduction
-`crc` is a tool to run containers. It manages a local [OpenShift 4.x](https://github.com/openshift/origin) cluster, or an [OKD](https://github.com/openshift/okd) cluster VM optimized for testing and development purposes.
+`crc` is a tool to run containers. It manages a local [OpenShift 5.x / 4.x](https://github.com/openshift/origin) cluster, or an [OKD](https://github.com/openshift/okd) cluster VM optimized for testing and development purposes.
 
 If you are looking for a solution for running OpenShift 3.x, you will need tools such as `oc cluster up`, [Minishift](http://github.com/minishift/minishift) or [CDK](https://developers.redhat.com/products/cdk/overview/).
 
