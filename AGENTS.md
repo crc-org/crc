@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-CRC (Runs Containers) manages a local OpenShift 4.x, OKD, or MicroShift cluster VM for development and testing. Module path: `github.com/crc-org/crc/v2`, Go 1.25.
+CRC (Runs Containers) manages a local OpenShift 5.x / 4.x, OKD, or MicroShift cluster VM for development and testing. Module path: `github.com/crc-org/crc/v2`, Go 1.25.
 
 ## Build Commands
 
