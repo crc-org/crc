@@ -491,6 +491,14 @@ func (c *Client) getRequest(resp *Response) stateFunc {
 			continue
 		}
 
+		// The server ignored the Range request and is sending the whole body.
+		// Discard the partial file instead of appending to it; keeping resp.fi
+		// makes copyFile truncate the file before the copy.
+		if resp.DidResume && resp.HTTPResponse.StatusCode == http.StatusOK {
+			resp.DidResume = false
+			resp.bytesResumed = 0
+		}
+
 		// check Content-Range header for resumed downloads
 		if resp.DidResume && resp.HTTPResponse.StatusCode == http.StatusPartialContent {
 			contentRange := resp.HTTPResponse.Header.Get("Content-Range")
@@ -583,7 +591,7 @@ func (c *Client) openWriter(resp *Response) stateFunc {
 		}
 
 		// open file
-		f, err := os.OpenFile(resp.Filename, flag, 0666)
+		f, err := os.OpenFile(resp.Filename, flag, 0644)
 		if err != nil {
 			resp.err = err
 			return c.closeResponse
