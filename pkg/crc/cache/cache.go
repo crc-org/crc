@@ -47,24 +47,37 @@ func (c *Cache) GetExecutableName() string {
 	return filepath.Base(c.executablePath)
 }
 
-/* getVersionGeneric runs the cached executable with 'args', and assumes the version string
- * was output on stdout's first line with this format:
- * something: <version>
- *
+/* getVersionGeneric runs the cached executable with 'args', and assumes the version
+ * string is the last whitespace-separated token of the first line of stdout, either
+ * in the form "something: <version>" or "something version <version>".
  * It returns <version> as a string
  */
-func getVersionGeneric(executablePath string, args ...string) (string, error) { //nolint:unused
+func getVersionGeneric(executablePath string, args ...string) (string, error) {
 	stdOut, _, err := crcos.RunWithDefaultLocale(executablePath, args...)
 	if err != nil {
 		logging.Debugf("failed to run executable %s: %v", executablePath, err)
 		return "", err
 	}
-	parsedOutput := strings.Split(stdOut, ":")
-	if len(parsedOutput) < 2 {
-		logging.Debugf("failed to parse version information for %s: %s", executablePath, stdOut)
+	return parseVersion(stdOut, executablePath)
+}
+
+/* parseVersion extracts the version from a `--version`-style command output.
+ * The version is expected to be the last whitespace-separated token of the
+ * first line, either in the form "something: <version>" (vfkit, oc) or
+ * "something version <version>" (gvproxy, macadam, crc-admin-helper).
+ */
+func parseVersion(output string, executablePath string) (string, error) {
+	firstLine := strings.SplitN(output, "\n", 2)[0]
+	// if the output is in "key: value" form, drop everything up to the last ':'
+	if idx := strings.LastIndex(firstLine, ":"); idx != -1 {
+		firstLine = firstLine[idx+1:]
+	}
+	fields := strings.Fields(firstLine)
+	if len(fields) == 0 {
+		logging.Debugf("failed to parse version information for %s: %s", executablePath, output)
 		return "", fmt.Errorf("Unable to parse the version information of %s", executablePath)
 	}
-	return strings.TrimSpace(parsedOutput[1]), nil
+	return fields[len(fields)-1], nil
 }
 
 func NewAdminHelperCache() *Cache {
@@ -74,12 +87,7 @@ func NewAdminHelperCache() *Cache {
 		url,
 		version,
 		func(executable string) (string, error) {
-			out, _, err := crcos.RunWithDefaultLocale(executable, "--version")
-			if err != nil {
-				return "", err
-			}
-			split := strings.Split(out, " ")
-			return strings.TrimSpace(split[len(split)-1]), nil
+			return getVersionGeneric(executable, "--version")
 		},
 	)
 }
