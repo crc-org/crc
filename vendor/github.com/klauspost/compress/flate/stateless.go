@@ -174,6 +174,11 @@ func load6416(b []byte, i int16) uint64 {
 }
 
 func statelessEnc(dst *tokens, src []byte, startAt int16) {
+	const (
+		inputMargin            = 12 - 1
+		minNonLiteralBlockSize = 1 + 1 + inputMargin
+	)
+
 	type tableEntry struct {
 		offset int16
 	}

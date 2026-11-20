@@ -16,7 +16,11 @@ type fastEncL1 struct {
 
 // EncodeL1 uses a similar algorithm to level 1
 func (e *fastEncL1) Encode(dst *tokens, src []byte) {
-	const hashBytes = 5
+	const (
+		inputMargin            = 12 - 1
+		minNonLiteralBlockSize = 1 + 1 + inputMargin
+		hashBytes              = 5
+	)
 	if debugDeflate && e.cur < 0 {
 		panic(fmt.Sprint("e.cur < 0: ", e.cur))
 	}

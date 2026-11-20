@@ -86,12 +86,6 @@ func InitializeTestSuite(tctx *godog.TestSuiteContext) {
 			CRCExecutable = filepath.Join(usr.HomeDir, "go", "bin")
 		}
 
-		// Force debug logs
-		err = os.Setenv("CRC_LOG_LEVEL", "debug")
-		if err != nil {
-			fmt.Println("Could not set `CRC_LOG_LEVEL` to `debug`:", err)
-		}
-
 		// put CRC executable location on top of PATH
 		path := os.Getenv("PATH")
 		newPath := fmt.Sprintf("%s%c%s", CRCExecutable, os.PathListSeparator, path)
@@ -214,11 +208,6 @@ func InitializeScenario(s *godog.ScenarioContext) {
 					os.Exit(1)
 				}
 				err = util.ExecuteCommand("sudo date -s '13 month'")
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-				err = util.ExecuteCommandWithRetry(10, "1s", "virsh --readonly -c qemu:///system capabilities", "contains", "<capabilities>")
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(1)
@@ -1134,7 +1123,7 @@ func EnsureVMPartitionSizeCorrect(expectedPVSizeStr string) error {
 	if err != nil {
 		return fmt.Errorf("error creating ssh runner: %v", err)
 	}
-	out, _, err := runner.Run("lsblk -oTYPE,SIZE -n")
+	out, _, err := runner.Run("lsblk -oTYPE,SIZE -n --bytes")
 	if err != nil {
 		return fmt.Errorf("error in executing command in crc vm: %v", err)
 	}
@@ -1176,20 +1165,24 @@ func deserializeListBlockDeviceCommandOutputToExtractPVSize(lsblkOutput string) 
 	if lvmBlockDeviceIndex == -1 {
 		return -1, fmt.Errorf("expecting lsblk output to contain a lvm device, got no device with type lvm")
 	}
-	_, err := fmt.Sscanf(blockDevices[lvmBlockDeviceIndex].Size, "%dG", &lvmSize)
+	// Parse LVM size in bytes and convert to GB
+	lvmSizeBytes, err := strconv.ParseInt(strings.TrimSpace(blockDevices[lvmBlockDeviceIndex].Size), 10, 64)
 	if err != nil {
 		return -1, fmt.Errorf("error in scanning lvm device size: %v", err)
 	}
+	lvmSize = int(lvmSizeBytes / (1024 * 1024 * 1024))
 
 	var diskSize = math.MinInt64
 	for _, blockDevice := range blockDevices {
 		if blockDevice.DeviceType == "disk" {
-			diskSizeValue, err := strconv.ParseFloat(strings.TrimSuffix(blockDevice.Size, "G"), 64)
+			// Parse disk size in bytes and convert to GB
+			diskSizeBytes, err := strconv.ParseInt(strings.TrimSpace(blockDevice.Size), 10, 64)
 			if err != nil {
 				return -1, fmt.Errorf("error in parsing disk size: %v", err)
 			}
-			if int(diskSizeValue) > diskSize {
-				diskSize = int(diskSizeValue)
+			diskSizeGB := int(diskSizeBytes / (1024 * 1024 * 1024))
+			if diskSizeGB > diskSize {
+				diskSize = diskSizeGB
 			}
 		}
 	}

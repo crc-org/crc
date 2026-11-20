@@ -6,7 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/crc-org/crc/v2/pkg/crc/cache"
 	"github.com/crc-org/crc/v2/pkg/crc/manpages"
+	"github.com/crc-org/crc/v2/pkg/crc/version"
 
 	"github.com/crc-org/crc/v2/pkg/crc/adminhelper"
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"
@@ -171,4 +173,66 @@ func removeCrcManPages() error {
 
 func removeCRCHostEntriesFromKnownHosts() error {
 	return ssh.RemoveCRCHostEntriesFromKnownHosts()
+}
+
+// Check if gvproxy executable is cached or not
+func checkGVProxyExecutableCached() error {
+	if version.IsInstaller() {
+		return nil
+	}
+
+	gvproxy := cache.NewGvproxyCache()
+	if !gvproxy.IsCached() {
+		return errors.New("gvproxy executable is not cached")
+	}
+	if err := gvproxy.CheckVersion(); err != nil {
+		return fmt.Errorf("unexpected version of the gvproxy executable: %w", err)
+	}
+	logging.Debug("gvproxy executable already cached")
+
+	return nil
+}
+
+func fixGVProxyExecutableCached() error {
+	if version.IsInstaller() {
+		return nil
+	}
+
+	gvproxy := cache.NewGvproxyCache()
+	if err := gvproxy.EnsureIsCached(); err != nil {
+		return fmt.Errorf("Unable to download gvproxy executable: %w", err)
+	}
+	logging.Debug("gvproxy executable cached")
+
+	return nil
+}
+
+// Check if macadam executable is cached or not
+func checkMacadamExecutableCached() error {
+	if version.IsInstaller() {
+		return nil
+	}
+
+	macadam := cache.NewMacadamCache()
+	if !macadam.IsCached() {
+		return fmt.Errorf("macadam executable is not cached")
+	}
+	if err := macadam.CheckVersion(); err != nil {
+		return fmt.Errorf("unexpected version of the macadam executable: %w", err)
+	}
+	logging.Debug("macadam executable already cached")
+	return nil
+}
+
+func fixMacadamExecutableCached() error {
+	if version.IsInstaller() {
+		return nil
+	}
+
+	macadam := cache.NewMacadamCache()
+	if err := macadam.EnsureIsCached(); err != nil {
+		return fmt.Errorf("Unable to download macadam executable: %w", err)
+	}
+	logging.Debug("macadam executable cached")
+	return nil
 }
