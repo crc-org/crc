@@ -158,3 +158,33 @@ func TestValidatePersistentVolumeSize(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateDNSSuffix(t *testing.T) {
+	tests := []struct {
+		name           string
+		value          string
+		expectedResult bool
+	}{
+		{"valid nip.io", "nip.io", true},
+		{"valid custom domain", "my-domain.com", true},
+		{"valid multi-level domain", "example.co.uk", true},
+		{"valid sslip.io", "sslip.io", true},
+		{"empty string", "", true},
+		{"contains space", "has space", false},
+		{"contains tab", "has\ttab", false},
+		{"contains forward slash", "path/to/thing", false},
+		{"http URL", "http://foo.com", false},
+		{"contains colon", "foo:bar", false},
+		{"contains backslash", "back\\slash", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, msg := validateDNSSuffix(tt.value)
+			assert.Equal(t, tt.expectedResult, result)
+			if !tt.expectedResult {
+				assert.Contains(t, msg, "must be a valid DNS suffix")
+			}
+		})
+	}
+}

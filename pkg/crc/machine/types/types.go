@@ -20,6 +20,9 @@ type StartConfig struct {
 	// Nameserver
 	NameServer string
 
+	// DNS suffix for cluster domain
+	DNSSuffix string
+
 	// User Pull secret
 	PullSecret cluster.PullSecretLoader
 
