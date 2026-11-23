@@ -353,7 +353,7 @@ func getVerifiedHash(url string, file string) (string, error) {
 		return "", err
 	}
 
-	verifiedHashes, err := gpg.GetVerifiedClearsignedMsgV3(constants.RedHatReleaseKey, string(signedHashes))
+	verifiedHashes, err := gpg.GetVerifiedClearsignedMsg(constants.RedHatReleaseKey, string(signedHashes))
 	if err != nil {
 		return "", fmt.Errorf("Invalid signature: %w", err)
 	}

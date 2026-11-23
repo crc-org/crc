@@ -8,10 +8,9 @@ import (
 	"strings"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
+	"github.com/ProtonMail/go-crypto/openpgp/clearsign"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
-	goOpenpgp "golang.org/x/crypto/openpgp"             //nolint:staticcheck
-	goClearsign "golang.org/x/crypto/openpgp/clearsign" //nolint:staticcheck
 )
 
 func Verify(filePath, signatureFilePath string) error {
@@ -38,12 +37,12 @@ func Verify(filePath, signatureFilePath string) error {
 	return nil
 }
 
-func GetVerifiedClearsignedMsgV3(pubkey, clearSignedMsg string) (string, error) {
-	k, err := goOpenpgp.ReadArmoredKeyRing(bytes.NewBufferString(pubkey))
+func GetVerifiedClearsignedMsg(pubkey, clearSignedMsg string) (string, error) {
+	k, err := openpgp.ReadArmoredKeyRing(bytes.NewBufferString(pubkey))
 	if err != nil {
 		return "", fmt.Errorf("Unable to read pubkey: %w", err)
 	}
-	block, rest := goClearsign.Decode([]byte(clearSignedMsg))
+	block, rest := clearsign.Decode([]byte(clearSignedMsg))
 	if len(rest) != 0 {
 		return "", fmt.Errorf("Error decoding clear signed message")
 	}
@@ -59,7 +58,7 @@ func GetVerifiedClearsignedMsgV3(pubkey, clearSignedMsg string) (string, error) 
 	copy(clearTextMsg, block.Bytes)
 	canonicalizedMsgText := canonicalize(trimEachLine(string(clearTextMsg)))
 
-	id, err := goOpenpgp.CheckDetachedSignature(k, bytes.NewBufferString(canonicalizedMsgText), bytes.NewBuffer(sig))
+	id, err := openpgp.CheckDetachedSignature(k, bytes.NewBufferString(canonicalizedMsgText), bytes.NewBuffer(sig), nil)
 	if err != nil {
 		return "", fmt.Errorf("Invalid signature: %w", err)
 	}

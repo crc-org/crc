@@ -190,20 +190,20 @@ func TestGetBundleType(t *testing.T) {
 }
 
 func TestVerifiedHash(t *testing.T) {
-	sha256sum, err := getVerifiedHash(testDataURI(t, "sha256sum_correct_4.13.0.txt.sig"), "crc_libvirt_4.13.0_amd64.crcbundle")
+	sha256sum, err := getVerifiedHash(testDataURI(t, "sha256sum_correct_5.0.0.txt.sig"), "crc_libvirt_5.0.0_amd64.crcbundle")
 	require.NoError(t, err)
-	require.Equal(t, "6aad57019aaab95b670378f569b3f4a16398da0358dd1057996453a8d6d92212", sha256sum)
+	require.Equal(t, "01abffc5d27552ba1427a184e62596a0f2b208e976b0bbf320d8a25c199b7f60", sha256sum)
 
 	// sha256sum.txt is unsigned
-	_, err = getVerifiedHash(testDataURI(t, "sha256sum.txt"), "crc_libvirt_4.13.0_amd64.crcbundle")
+	_, err = getVerifiedHash(testDataURI(t, "sha256sum.txt"), "crc_libvirt_5.0.0_amd64.crcbundle")
 	require.Error(t, err)
 
 	// sha256sum.txt.sig does not contain a sha256sum for fake.crcbundle
-	_, err = getVerifiedHash(testDataURI(t, "sha256sum_correct_4.13.0.txt.sig"), "fake.crcbundle")
+	_, err = getVerifiedHash(testDataURI(t, "sha256sum_correct_5.0.0.txt.sig"), "fake.crcbundle")
 	require.Error(t, err)
 
 	// the sha256sum file is signed with a GPG key which is not Red Hat's
-	_, err = getVerifiedHash(testDataURI(t, "sha256sum_incorrect_4.13.0.txt.sig"), "crc_libvirt_4.13.0_amd64.crcbundle")
+	_, err = getVerifiedHash(testDataURI(t, "sha256sum_incorrect_5.0.0.txt.sig"), "crc_libvirt_5.0.0_amd64.crcbundle")
 	require.ErrorContains(t, err, "signature made by unknown entity")
 }
 
