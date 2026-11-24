@@ -1,6 +1,7 @@
 package gpg
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
@@ -47,4 +48,29 @@ func TestVerify(t *testing.T) {
 	msg, err := GetVerifiedClearsignedMsg(constants.RedHatReleaseKey, testMsg)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedMsg, msg)
+}
+
+func TestVerifyTamperedMessage(t *testing.T) {
+	tamperedMsg := strings.Replace(testMsg,
+		"422d32200318c8334f76eac037b080eb3b374e02006bdb4c69a61f93680283bc",
+		"0000000000000000000000000000000000000000000000000000000000000000", 1)
+	_, err := GetVerifiedClearsignedMsg(constants.RedHatReleaseKey, tamperedMsg)
+	assert.Error(t, err)
+}
+
+func TestVerifyWrongKey(t *testing.T) {
+	_, err := GetVerifiedClearsignedMsg(constants.CrcOrgPublicKey, testMsg)
+	assert.Error(t, err)
+}
+
+func TestVerifyTrailingData(t *testing.T) {
+	_, err := GetVerifiedClearsignedMsg(constants.RedHatReleaseKey, testMsg+"\ntrailing data")
+	assert.Error(t, err)
+}
+
+func TestVerifyInvalidInput(t *testing.T) {
+	for _, msg := range []string{"", "not a clearsigned message"} {
+		_, err := GetVerifiedClearsignedMsg(constants.RedHatReleaseKey, msg)
+		assert.Error(t, err)
+	}
 }
