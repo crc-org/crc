@@ -55,8 +55,8 @@ require (
 	github.com/zalando/go-keyring v0.2.8
 	go.podman.io/common v0.70.0
 	go.podman.io/image/v5 v5.42.1
-	golang.org/x/crypto v0.58.0
-	golang.org/x/net v0.62.0
+	golang.org/x/crypto v0.59.0
+	golang.org/x/net v0.63.0
 	golang.org/x/sync v0.25.0
 	golang.org/x/sys v0.50.0
 	golang.org/x/term v0.48.0
