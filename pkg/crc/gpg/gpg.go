@@ -3,9 +3,7 @@ package gpg
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
-	"strings"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/ProtonMail/go-crypto/openpgp/clearsign"
@@ -38,46 +36,23 @@ func Verify(filePath, signatureFilePath string) error {
 }
 
 func GetVerifiedClearsignedMsg(pubkey, clearSignedMsg string) (string, error) {
-	k, err := openpgp.ReadArmoredKeyRing(bytes.NewBufferString(pubkey))
+	keyring, err := openpgp.ReadArmoredKeyRing(bytes.NewBufferString(pubkey))
 	if err != nil {
 		return "", fmt.Errorf("Unable to read pubkey: %w", err)
 	}
 	block, rest := clearsign.Decode([]byte(clearSignedMsg))
-	if len(rest) != 0 {
+	if block == nil || len(rest) != 0 {
 		return "", fmt.Errorf("Error decoding clear signed message")
 	}
-	sig, err := io.ReadAll(block.ArmoredSignature.Body)
-	if err != nil {
-		return "", fmt.Errorf("Error reading signature: %w", err)
-	}
 
-	// CheckDetachedSignature method expects the clear text msg
-	// in the canonical format as defined in the pgp spec which
-	// says that each line of the text needs to end with \r\n
-	clearTextMsg := make([]byte, len(block.Bytes))
-	copy(clearTextMsg, block.Bytes)
-	canonicalizedMsgText := canonicalize(trimEachLine(string(clearTextMsg)))
-
-	id, err := openpgp.CheckDetachedSignature(k, bytes.NewBufferString(canonicalizedMsgText), bytes.NewBuffer(sig), nil)
+	signer, err := block.VerifySignature(keyring, nil)
 	if err != nil {
 		return "", fmt.Errorf("Invalid signature: %w", err)
 	}
-	logging.Debugf("Got valid signature from key id: %s", id.PrimaryKey.KeyIdString())
-	return trimEachLine(string(clearTextMsg)), nil
-}
-
-// https://github.com/ProtonMail/gopenpgp/blob/5aebf6a366fd8b81e80c337186fdaa0793597354/internal/common.go#L10-L12
-func canonicalize(text string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(text, "\r\n", "\n"), "\n", "\r\n")
-}
-
-// https://github.com/ProtonMail/gopenpgp/blob/5aebf6a366fd8b81e80c337186fdaa0793597354/internal/common.go#L14-L22
-func trimEachLine(text string) string {
-	lines := strings.Split(text, "\n")
-
-	for i := range lines {
-		lines[i] = strings.TrimRight(lines[i], " \t\r")
-	}
-
-	return strings.Join(lines, "\n")
+	logging.Debugf("Got valid signature from key id: %s", signer.PrimaryKey.KeyIdString())
+	// block.VerifySignature checked the signature against block.Bytes, the
+	// canonical form of the signed text (dash-escaping removed, trailing
+	// whitespace stripped, CRLF line endings). block.Plaintext holds the same
+	// text with LF line endings.
+	return string(block.Plaintext), nil
 }
