@@ -23,7 +23,6 @@ type CRCBuilder struct {
 func NewCRCCommand(args ...string) *CRCBuilder {
 	cmd := exec.Command("crc", args...)
 	cmd.Env = append(os.Environ(), util.EnvVariable("CRC_DISABLE_UPDATE_CHECK", "true"))
-	cmd.Env = append(cmd.Env, util.EnvVariable("CRC_LOG_LEVEL", "debug"))
 	return &CRCBuilder{
 		cmd: cmd,
 	}
@@ -98,11 +97,12 @@ func crcSuccess(op string, args ...string) string {
 }
 
 // Helper function to run crc setup or start commands expecting fails
-func crcFails(op string, args ...string) string {
+// Commented out since this is only used for resize test and that is ignore atm
+/*func crcFails(op string, args ...string) string {
 	output, _ := RunCRCExpectFail(
 		crcCmd(op, args...)...)
 	return output
-}
+}*/
 
 // Helper function to add custom parameters if required
 func crcCmd(op string, args ...string) []string {

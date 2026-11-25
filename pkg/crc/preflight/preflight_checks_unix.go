@@ -45,6 +45,24 @@ func genericPreflightChecks(_ crcpreset.Preset) []Check {
 			labels: None,
 		},
 		{
+			configKeySuffix:  "check-gvproxy-cached",
+			checkDescription: "Checking if gvproxy executable is cached",
+			check:            checkGVProxyExecutableCached,
+			fixDescription:   "Caching gvproxy executable",
+			fix:              fixGVProxyExecutableCached,
+
+			labels: None,
+		},
+		{
+			configKeySuffix:  "check-macadam-cached",
+			checkDescription: "Checking if macadam executable is cached",
+			check:            checkMacadamExecutableCached,
+			fixDescription:   "Caching macadam executable",
+			fix:              fixMacadamExecutableCached,
+
+			labels: None,
+		},
+		{
 			configKeySuffix:  "check-supported-cpu-arch",
 			checkDescription: "Checking if running on a supported CPU architecture",
 			check:            checkSupportedCPUArch,
